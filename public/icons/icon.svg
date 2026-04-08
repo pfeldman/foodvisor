@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#261A10"/>
+      <stop offset="100%" stop-color="#190F08"/>
+    </linearGradient>
+    <linearGradient id="fork" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F09060"/>
+      <stop offset="100%" stop-color="#C05028"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Left tine -->
+  <line x1="210" y1="108" x2="210" y2="218"
+        stroke="url(#fork)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Center tine (continues as handle) -->
+  <line x1="256" y1="108" x2="256" y2="404"
+        stroke="url(#fork)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Right tine -->
+  <line x1="302" y1="108" x2="302" y2="218"
+        stroke="url(#fork)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Left shoulder: curves inward to center -->
+  <path d="M210 218 Q210 272 256 278"
+        fill="none" stroke="url(#fork)" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Right shoulder: curves inward to center -->
+  <path d="M302 218 Q302 272 256 278"
+        fill="none" stroke="url(#fork)" stroke-width="14" stroke-linecap="round"/>
+</svg>

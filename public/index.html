@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Foodvisor</title>
+  <meta name="description" content="Registrá tu comida con IA y seguí tus calorías">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#F7F2E8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1A1714" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Foodvisor">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div class="header-inner">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="15" fill="var(--accent)" opacity="0.15"/>
+            <path d="M10 9v5a4 4 0 0 0 3 3.87V25h2v-7.13A4 4 0 0 0 18 14V9h-2v5h-1V9h-1v5h-1V9h-2z" fill="var(--accent)"/>
+            <circle cx="22" cy="12" r="3.5" stroke="var(--accent)" stroke-width="1.5"/>
+            <path d="M22 15.5V25" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="logo-text">Foodvisor</span>
+        </div>
+        <div id="header-date" class="header-date"></div>
+      </div>
+    </header>
+
+    <main id="main"></main>
+
+    <nav id="bottom-nav">
+      <button class="nav-btn active" data-view="today">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Hoy</span>
+      </button>
+      <button class="nav-btn" data-view="week">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Semana</span>
+      </button>
+      <button class="nav-btn" data-view="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Historial</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Hidden camera input -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+
+  <!-- Analyzing overlay -->
+  <div id="analyze-overlay" class="overlay hidden">
+    <div class="analyze-wrap">
+      <div class="analyze-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="ring-center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      </div>
+      <p class="analyze-title">Analizando tu comida</p>
+      <p class="analyze-sub">Identificando plato y calorías...</p>
+    </div>
+  </div>
+
+  <!-- Result modal -->
+  <div id="result-modal" class="modal-wrap hidden">
+    <div class="modal-backdrop" id="result-backdrop"></div>
+    <div class="modal-sheet" id="result-sheet">
+      <div class="modal-drag-area" id="result-drag">
+        <div class="modal-handle"></div>
+      </div>
+      <div class="modal-body">
+        <div class="result-photo-wrap" id="result-photo-wrap"></div>
+        <div class="result-cal-badge">
+          <span class="result-cal-num" id="result-cal-num">0</span>
+          <span class="result-cal-unit">kcal</span>
+        </div>
+        <div class="result-field-wrap">
+          <label class="field-label">Plato</label>
+          <input type="text" id="result-dish-input" class="result-dish-input" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <div class="result-desc" id="result-desc"></div>
+        <div class="result-meta-row">
+          <span id="result-confidence" class="confidence-pill"></span>
+        </div>
+        <div class="result-field-wrap">
+          <label class="field-label">Calorías aproximadas</label>
+          <div class="cal-input-row">
+            <button class="cal-adj" id="cal-minus">−</button>
+            <input type="number" id="result-cal-input" class="cal-input" min="0" max="9999" step="10">
+            <button class="cal-adj" id="cal-plus">+</button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="btn-discard">Descartar</button>
+          <button class="btn-primary" id="btn-save">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export modal -->
+  <div id="export-modal" class="modal-wrap hidden">
+    <div class="modal-backdrop" id="export-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-drag-area">
+        <div class="modal-handle"></div>
+      </div>
+      <div class="modal-body">
+        <h2 class="modal-title">Exportar para nutricionista</h2>
+        <div id="export-preview" class="export-preview"></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="btn-close-export">Cerrar</button>
+          <button class="btn-primary" id="btn-copy-export">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copiar texto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
