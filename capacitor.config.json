@@ -1,0 +1,10 @@
+{
+  "appId": "com.pieve.foodvisor",
+  "appName": "Foodvisor",
+  "webDir": "public",
+  "server": {
+    "url": "https://foodvisor-one.vercel.app",
+    "cleartext": false,
+    "allowNavigation": ["*"]
+  }
+}
