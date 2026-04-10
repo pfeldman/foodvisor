@@ -1357,7 +1357,7 @@ const WIZARD_STEPS = [
           <button class="wizard-option ${data.sexo === 'M' ? 'active' : ''}" data-val="M">Masculino</button>
           <button class="wizard-option ${data.sexo === 'F' ? 'active' : ''}" data-val="F">Femenino</button>
         </div>
-        <button class="btn-primary wizard-next" data-next="cuerpo">Siguiente</button>
+        <button class="btn-primary wizard-next" data-next="health">Siguiente</button>
       </div>
     `,
     init: () => {
@@ -1465,7 +1465,7 @@ const WIZARD_STEPS = [
             <button class="wizard-option ${(data.restricciones || []).includes(r) ? 'active' : ''}" data-val="${r}">${r}</button>
           `).join('')}
         </div>
-        <button class="btn-primary wizard-next" data-next="health">Siguiente</button>
+        <button class="btn-primary wizard-next" data-next="metrics">Siguiente</button>
       </div>
     `,
     init: () => {
@@ -1498,10 +1498,10 @@ const WIZARD_STEPS = [
     render: (data) => {
       const isNative = typeof Health !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform();
       if (!isNative) {
-        // Skip this step in browser — auto-advance to metrics
+        // Skip this step in browser — auto-advance to cuerpo
         return `
           <div class="wizard-step" style="display:none">
-            <button class="btn-primary wizard-next" data-next="metrics" id="health-auto-skip">skip</button>
+            <button class="btn-primary wizard-next" data-next="cuerpo" id="health-auto-skip">skip</button>
           </div>
         `;
       }
@@ -1509,9 +1509,9 @@ const WIZARD_STEPS = [
         <div class="wizard-step wizard-welcome">
           <div class="wizard-emoji">&#129505;</div>
           <h2 class="wizard-title">Sincronizar con Salud</h2>
-          <p class="wizard-text">Podemos leer tu peso y altura de Apple Health / Google Health para mantener tu perfil actualizado, y registrar automaticamente la nutricion de cada comida.</p>
+          <p class="wizard-text">Podemos leer tu peso y altura de Apple Health / Google Health para pre-llenar tus datos y registrar automaticamente la nutricion de cada comida.</p>
           <button class="btn-primary" id="btn-health-sync" style="width:100%;margin-bottom:12px">Conectar con Salud</button>
-          <button class="btn-secondary wizard-next" data-next="metrics" style="width:100%">Omitir por ahora</button>
+          <button class="btn-secondary wizard-next" data-next="cuerpo" style="width:100%">Omitir por ahora</button>
           <div id="health-status" style="margin-top:12px;font-size:13px;color:var(--text-2);text-align:center"></div>
         </div>
       `;
@@ -1540,12 +1540,11 @@ const WIZARD_STEPS = [
               if (result.height) wizardData.altura = result.height;
               wizardData.healthSync = true;
               statusEl.innerHTML = `Sincronizado! ${result.weight ? `Peso: ${result.weight}kg` : ''} ${result.height ? `Altura: ${result.height}cm` : ''}`;
-              // Auto-advance after a moment
-              setTimeout(() => renderWizardStep('metrics'), 1500);
+              setTimeout(() => renderWizardStep('cuerpo'), 1500);
             } else {
               wizardData.healthSync = true;
               statusEl.textContent = 'Conectado. No se encontraron datos recientes.';
-              setTimeout(() => renderWizardStep('metrics'), 1500);
+              setTimeout(() => renderWizardStep('cuerpo'), 1500);
             }
           } catch {
             statusEl.textContent = 'No se pudo conectar. Podes intentarlo despues en Configuracion.';
