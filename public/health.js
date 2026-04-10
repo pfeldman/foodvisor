@@ -15,7 +15,8 @@ const Health = {
 
     try {
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        this._plugin = window.Capacitor.Plugins.CapacitorHealth || null;
+        this._plugin = window.Capacitor.Plugins.Health
+          || window.Capacitor.Plugins.CapacitorHealth || null;
         if (this._plugin) {
           const status = await this._plugin.isAvailable();
           this._available = status.available === true;
@@ -134,7 +135,8 @@ const Health = {
     try {
       if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return null;
 
-      const contacts = window.Capacitor.Plugins.CapacitorContacts || null;
+      const contacts = window.Capacitor.Plugins.Contacts
+        || window.Capacitor.Plugins.CapacitorContacts || null;
       if (!contacts) return null;
 
       // Request permission
