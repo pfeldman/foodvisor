@@ -792,14 +792,9 @@ body {
   background: var(--bg);
   max-width: var(--max-w);
   margin: 0 auto;
-  padding-top: var(--safe-top);
-  overscroll-behavior: none;
-}
-
-.nuri-inner {
   display: flex;
   flex-direction: column;
-  height: calc(100% - var(--safe-top));
+  padding-top: var(--safe-top);
 }
 
 .nuri-header {

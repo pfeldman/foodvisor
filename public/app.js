@@ -539,9 +539,8 @@ function renderNuri(container) {
   const name = profile?.nombre || 'amigo/a';
 
   container.innerHTML = `
-    <div class="nuri-view" id="nuri-view">
-      <div class="nuri-inner">
-        <div class="nuri-header">
+    <div class="nuri-view">
+      <div class="nuri-header">
           <div class="nuri-avatar">N</div>
           <div class="nuri-intro">
             <div class="nuri-name">Nuri</div>
@@ -585,7 +584,6 @@ function renderNuri(container) {
             </svg>
           </button>
         </div>
-      </div>
     </div>
   `;
 
@@ -615,29 +613,7 @@ function renderNuri(container) {
   });
 
   $('bottom-nav').style.display = 'none';
-
-  const chatEl = $('nuri-chat');
-  const nuriInner = container.querySelector('.nuri-inner');
-
-  // Scroll chat to bottom
-  setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
-
-  // visualViewport adjusts the inner container when keyboard opens
-  if (window.visualViewport) {
-    const nuriView = $('nuri-view');
-    const adjustHeight = () => {
-      // Set the whole view to visualViewport height, inner is 100% of that minus padding
-      nuriView.style.height = window.visualViewport.height + 'px';
-      setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
-    };
-    window.visualViewport.addEventListener('resize', adjustHeight);
-    adjustHeight();
-
-    state._nuriCleanup = () => {
-      window.visualViewport.removeEventListener('resize', adjustHeight);
-      $('bottom-nav').style.display = '';
-    };
-  }
+  state._nuriCleanup = () => { $('bottom-nav').style.display = ''; };
 }
 
 async function sendNuriMessage(text) {
