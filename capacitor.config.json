@@ -2,6 +2,7 @@
   "appId": "com.pieve.foodvisor",
   "appName": "Foodvisor",
   "webDir": "public",
+  "backgroundColor": "#1a1814",
   "server": {
     "url": "https://foodvisor-one.vercel.app",
     "cleartext": false,
