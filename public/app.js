@@ -1001,11 +1001,17 @@ function renderQualityRow(calidad) {
     const data = calidad[ax.key];
     if (!data) return '';
     const nivel = data.nivel || 2;
+    const pct = Math.round((nivel / 4) * 100);
     return `
-      <div class="quality-item q-level-${nivel}" title="${escHtml(data.detalle || '')}">
-        <span class="quality-icon">${ax.icon}</span>
-        <span class="quality-label">${ax.label}</span>
-        <span class="quality-level">${levelLabels[nivel]}</span>
+      <div class="quality-bar-item">
+        <div class="quality-bar-header">
+          <span class="quality-bar-label">${ax.icon} ${ax.label}</span>
+          <span class="quality-bar-level q-text-${nivel}">${levelLabels[nivel]}</span>
+        </div>
+        <div class="quality-bar-track">
+          <div class="quality-bar-fill q-fill-${nivel}" style="width:${pct}%"></div>
+        </div>
+        ${data.detalle ? `<div class="quality-bar-detail">${escHtml(data.detalle)}</div>` : ''}
       </div>
     `;
   }).join('');

@@ -1241,55 +1241,65 @@ body {
 .confidence-pill.media { background: var(--amber-lt); color: var(--amber); }
 .confidence-pill.baja  { background: var(--red-lt);   color: var(--red);   }
 
-/* Quality row */
+/* Quality progress bars */
 .quality-row {
   display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.quality-item {
-  flex: 1;
-  min-width: 90px;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-xs);
-  padding: 8px 10px;
-  text-align: center;
-  border: 1.5px solid transparent;
+.quality-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.quality-item.q-level-1 { border-color: var(--red); }
-.quality-item.q-level-2 { border-color: var(--amber); }
-.quality-item.q-level-3 { border-color: var(--green); }
-.quality-item.q-level-4 { border-color: #2E9959; }
-
-.quality-icon {
-  font-size: 16px;
-  display: block;
-  margin-bottom: 2px;
+.quality-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.quality-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: .3px;
-  display: block;
+.quality-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
 }
 
-.quality-level {
+.quality-bar-level {
   font-size: 11px;
   font-weight: 700;
-  display: block;
-  margin-top: 2px;
 }
 
-.q-level-1 .quality-level { color: var(--red); }
-.q-level-2 .quality-level { color: var(--amber); }
-.q-level-3 .quality-level { color: var(--green); }
-.q-level-4 .quality-level { color: #2E9959; }
+.q-text-1 { color: var(--red); }
+.q-text-2 { color: var(--amber); }
+.q-text-3 { color: var(--green); }
+.q-text-4 { color: #2E9959; }
+
+.quality-bar-track {
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quality-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+
+.q-fill-1 { background: linear-gradient(90deg, var(--red), var(--red)); }
+.q-fill-2 { background: linear-gradient(90deg, var(--red), var(--amber)); }
+.q-fill-3 { background: linear-gradient(90deg, var(--amber), var(--green)); }
+.q-fill-4 { background: linear-gradient(90deg, var(--green), #2E9959); }
+
+.quality-bar-detail {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
 
 /* Macro bar */
 .macro-bar {
