@@ -7,5 +7,10 @@
     "url": "https://foodvisor-one.vercel.app",
     "cleartext": false,
     "allowNavigation": ["*"]
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "none"
+    }
   }
 }

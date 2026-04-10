@@ -613,7 +613,34 @@ function renderNuri(container) {
   });
 
   $('bottom-nav').style.display = 'none';
-  state._nuriCleanup = () => { $('bottom-nav').style.display = ''; };
+
+  const chatEl = $('nuri-chat');
+  const inputWrap = container.querySelector('.nuri-input-wrap');
+
+  setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
+
+  // With Keyboard resize:"none", the keyboard overlays.
+  // Use visualViewport to move input above keyboard.
+  if (window.visualViewport) {
+    const onViewportChange = () => {
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      if (keyboardHeight > 50) {
+        inputWrap.style.transform = `translateY(-${keyboardHeight}px)`;
+        chatEl.style.paddingBottom = (80 + keyboardHeight) + 'px';
+      } else {
+        inputWrap.style.transform = '';
+        chatEl.style.paddingBottom = '';
+      }
+      setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
+    };
+    window.visualViewport.addEventListener('resize', onViewportChange);
+    state._nuriCleanup = () => {
+      window.visualViewport.removeEventListener('resize', onViewportChange);
+      $('bottom-nav').style.display = '';
+    };
+  } else {
+    state._nuriCleanup = () => { $('bottom-nav').style.display = ''; };
+  }
 }
 
 async function sendNuriMessage(text) {
