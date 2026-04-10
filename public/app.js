@@ -1034,26 +1034,28 @@ function renderIngredientsList() {
         <input type="text" class="ing-name" value="${escHtml(ing.nombre)}" data-field="nombre" data-idx="${i}">
         <button class="ing-del" data-remove="${i}" title="Quitar">&times;</button>
       </div>
-      <div class="ing-details">
+      <div class="ing-detail-row">
         <div class="ing-field">
+          <span class="ing-label">Gramos</span>
           <input type="number" class="ing-num" value="${ing.gramos}" data-field="gramos" data-idx="${i}" min="0" step="10">
-          <span class="ing-unit">g</span>
         </div>
         <div class="ing-field">
+          <span class="ing-label">Kcal</span>
           <input type="number" class="ing-num" value="${ing.calorias}" data-field="calorias" data-idx="${i}" min="0" step="5">
-          <span class="ing-unit">kcal</span>
         </div>
+      </div>
+      <div class="ing-detail-row">
         <div class="ing-field">
+          <span class="ing-label">Prot</span>
           <input type="number" class="ing-num" value="${Math.round(ing.proteinas)}" data-field="proteinas" data-idx="${i}" min="0" step="1">
-          <span class="ing-unit">P</span>
         </div>
         <div class="ing-field">
+          <span class="ing-label">Carbs</span>
           <input type="number" class="ing-num" value="${Math.round(ing.carbohidratos)}" data-field="carbohidratos" data-idx="${i}" min="0" step="1">
-          <span class="ing-unit">C</span>
         </div>
         <div class="ing-field">
+          <span class="ing-label">Grasas</span>
           <input type="number" class="ing-num" value="${Math.round(ing.grasas)}" data-field="grasas" data-idx="${i}" min="0" step="1">
-          <span class="ing-unit">G</span>
         </div>
       </div>
     </div>

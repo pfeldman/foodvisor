@@ -1407,20 +1407,29 @@ body {
 
 .ing-del:active { color: var(--red); }
 
-.ing-details {
+.ing-detail-row {
   display: flex;
-  gap: 4px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .ing-field {
   flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 2px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 4px 6px;
+  padding: 6px 8px;
+}
+
+.ing-label {
+  font-size: 9px;
+  color: var(--text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
 }
 
 .ing-num {
@@ -1428,10 +1437,9 @@ body {
   background: transparent;
   border: none;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  text-align: center;
   outline: none;
   -moz-appearance: textfield;
   user-select: text;
@@ -1442,13 +1450,6 @@ body {
 .ing-num::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-.ing-unit {
-  font-size: 10px;
-  color: var(--text-3);
-  font-weight: 700;
-  flex-shrink: 0;
 }
 
 /* Result total row */
