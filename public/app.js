@@ -1582,7 +1582,7 @@ const WIZARD_STEPS = [
                 alert('DEBUG perm: ' + JSON.stringify(perm));
 
                 const result = await cp.getContacts({
-                  projection: { givenName: true, familyName: true, birthday: true },
+                  fields: ['givenName', 'familyName', 'birthday'],
                 });
                 const list = result?.contacts || [];
                 alert('DEBUG contacts count: ' + list.length + ', first: ' + JSON.stringify(list[0] || 'none').slice(0, 300));
