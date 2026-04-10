@@ -789,10 +789,6 @@ body.nuri-locked {
   overflow: hidden;
 }
 
-body.nuri-locked #app {
-  visibility: hidden;
-}
-
 /* ─── NURI (Coach) VIEW ──────────────────────────── */
 .nuri-view {
   position: fixed;
