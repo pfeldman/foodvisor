@@ -1534,11 +1534,32 @@ const WIZARD_STEPS = [
           syncBtn.disabled = true;
 
           try {
-            // Read health data and name in parallel
-            const [healthResult, ownerName] = await Promise.all([
-              syncHealthToProfile(),
-              (typeof Health !== 'undefined' && Health.getOwnerName) ? Health.getOwnerName() : null,
-            ]);
+            // DEBUG: Check what plugins are available
+            const plugins = window.Capacitor?.Plugins || {};
+            const pluginNames = Object.keys(plugins);
+            alert('DEBUG Plugins: ' + pluginNames.join(', '));
+
+            // Read health data
+            let healthResult = null;
+            try {
+              healthResult = await syncHealthToProfile();
+              alert('DEBUG Health result: ' + JSON.stringify(healthResult));
+            } catch (e) {
+              alert('DEBUG Health error: ' + e.message);
+            }
+
+            // Read name from contacts
+            let ownerName = null;
+            try {
+              if (typeof Health !== 'undefined' && Health.getOwnerName) {
+                ownerName = await Health.getOwnerName();
+                alert('DEBUG Owner name: ' + JSON.stringify(ownerName));
+              } else {
+                alert('DEBUG getOwnerName not available');
+              }
+            } catch (e) {
+              alert('DEBUG Contacts error: ' + e.message);
+            }
 
             if (ownerName && !wizardData.nombre) {
               wizardData.nombre = ownerName;
