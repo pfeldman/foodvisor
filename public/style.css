@@ -781,13 +781,17 @@ body {
   padding: 0 16px;
 }
 
+/* Main removes bottom padding in nuri mode */
+#main.nuri-mode {
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
 /* ─── NURI (Coach) VIEW ──────────────────────────── */
 .nuri-view {
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 54px - 72px - var(--safe-top) - var(--safe-bot));
-  /* Prevent iOS keyboard from pushing content off screen */
-  overflow: hidden;
 }
 
 .nuri-header {
@@ -944,9 +948,10 @@ body {
 .nuri-input-wrap {
   display: flex;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 16px calc(12px + var(--safe-bot));
   border-top: 1px solid var(--border);
   background: var(--bg);
+  flex-shrink: 0;
 }
 
 .nuri-input {

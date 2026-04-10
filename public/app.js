@@ -175,11 +175,8 @@ function setupNav() {
 
 // ─── Routing ──────────────────────────────────────
 function renderView(view) {
-  // Clean up Nuri keyboard listener if leaving
-  if (state._nuriCleanup && view !== 'nuri') {
-    state._nuriCleanup();
-    state._nuriCleanup = null;
-  }
+  // Toggle nuri mode on main (removes bottom padding)
+  $('main').classList.toggle('nuri-mode', view === 'nuri');
   state.view = view;
   const main = $('main');
   if (view === 'today')        renderToday(main);
@@ -612,31 +609,15 @@ function renderNuri(container) {
     }
   });
 
-  // Handle keyboard resize on iOS
-  const nuriView = container.querySelector('.nuri-view');
-  const chatEl = $('nuri-chat');
-  if (window.visualViewport) {
-    const onResize = () => {
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-      nuriView.style.height = `calc(${window.visualViewport.height}px - 54px - var(--safe-top))`;
-      if (keyboardHeight > 100) {
-        // Keyboard open — hide bottom nav, scroll chat to bottom
-        $('bottom-nav').style.display = 'none';
-        setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
-      } else {
-        $('bottom-nav').style.display = '';
-      }
-    };
-    window.visualViewport.addEventListener('resize', onResize);
-    // Clean up on next render
-    state._nuriCleanup = () => {
-      window.visualViewport.removeEventListener('resize', onResize);
-      $('bottom-nav').style.display = '';
-    };
-  }
-
   // Scroll chat to bottom
+  const chatEl = $('nuri-chat');
   setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
+
+  // On focus, scroll to bottom after keyboard animation
+  const input = $('nuri-input');
+  input?.addEventListener('focus', () => {
+    setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 300);
+  });
 }
 
 async function sendNuriMessage(text) {
