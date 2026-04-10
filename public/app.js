@@ -612,8 +612,9 @@ function renderNuri(container) {
     }
   });
 
-  // Nuri is fullscreen fixed — hide bottom nav, manage keyboard
+  // Nuri is fullscreen fixed — hide bottom nav, lock body scroll
   $('bottom-nav').style.display = 'none';
+  document.body.style.overflow = 'hidden';
 
   const chatEl = $('nuri-chat');
   const nuriView = container.querySelector('.nuri-view');
@@ -633,6 +634,7 @@ function renderNuri(container) {
     state._nuriCleanup = () => {
       window.visualViewport.removeEventListener('resize', adjustHeight);
       $('bottom-nav').style.display = '';
+      document.body.style.overflow = '';
     };
   }
 }
