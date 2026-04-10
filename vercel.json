@@ -1,5 +1,7 @@
 {
   "rewrites": [
-    { "source": "/api/analyze", "destination": "/api/analyze" }
+    { "source": "/api/analyze", "destination": "/api/analyze" },
+    { "source": "/api/coach", "destination": "/api/coach" },
+    { "source": "/api/recommend", "destination": "/api/recommend" }
   ]
 }

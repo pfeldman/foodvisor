@@ -15,7 +15,7 @@
   <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -31,7 +31,12 @@
           </svg>
           <span class="logo-text">Foodvisor</span>
         </div>
-        <div id="header-date" class="header-date"></div>
+        <button id="btn-settings" class="header-settings" title="Configurar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -53,6 +58,12 @@
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
         <span>Semana</span>
+      </button>
+      <button class="nav-btn" data-view="nuri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Nuri</span>
       </button>
       <button class="nav-btn" data-view="history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -81,11 +92,11 @@
         </div>
       </div>
       <p class="analyze-title">Analizando tu comida</p>
-      <p class="analyze-sub">Identificando plato y calorías...</p>
+      <p class="analyze-sub">Identificando ingredientes y nutrientes...</p>
     </div>
   </div>
 
-  <!-- Result modal -->
+  <!-- Result modal (redesigned with ingredients) -->
   <div id="result-modal" class="modal-wrap hidden">
     <div class="modal-backdrop" id="result-backdrop"></div>
     <div class="modal-sheet" id="result-sheet">
@@ -94,26 +105,37 @@
       </div>
       <div class="modal-body">
         <div class="result-photo-wrap" id="result-photo-wrap"></div>
-        <div class="result-cal-badge">
-          <span class="result-cal-num" id="result-cal-num">0</span>
-          <span class="result-cal-unit">kcal</span>
-        </div>
-        <div class="result-field-wrap">
-          <label class="field-label">Plato</label>
-          <input type="text" id="result-dish-input" class="result-dish-input" autocomplete="off" autocorrect="off" spellcheck="false">
-        </div>
-        <div class="result-desc" id="result-desc"></div>
-        <div class="result-meta-row">
+
+        <div class="result-header-row">
+          <div class="result-field-wrap" style="flex:1;margin-bottom:0">
+            <input type="text" id="result-dish-input" class="result-dish-input" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Nombre del plato">
+          </div>
           <span id="result-confidence" class="confidence-pill"></span>
         </div>
-        <div class="result-field-wrap">
-          <label class="field-label">Calorías aproximadas</label>
-          <div class="cal-input-row">
-            <button class="cal-adj" id="cal-minus">−</button>
-            <input type="number" id="result-cal-input" class="cal-input" min="0" max="9999" step="10">
-            <button class="cal-adj" id="cal-plus">+</button>
+
+        <div class="result-desc" id="result-desc"></div>
+
+        <!-- Quality scores -->
+        <div class="quality-row" id="quality-row"></div>
+
+        <!-- Macro summary bar -->
+        <div class="macro-bar" id="result-macros"></div>
+
+        <!-- Ingredients list -->
+        <div class="ingredients-section">
+          <div class="section-label-row">
+            <span class="field-label">Ingredientes</span>
+            <button class="btn-add-ing" id="btn-add-ingredient">+ Agregar</button>
           </div>
+          <div id="ingredients-list" class="ingredients-list"></div>
         </div>
+
+        <!-- Total calories -->
+        <div class="result-total-row">
+          <span class="result-total-label">Total</span>
+          <span class="result-total-num" id="result-total-cal">0 kcal</span>
+        </div>
+
         <div class="modal-actions">
           <button class="btn-secondary" id="btn-discard">Descartar</button>
           <button class="btn-primary" id="btn-save">
@@ -151,6 +173,26 @@
     </div>
   </div>
 
+  <!-- Wizard modal -->
+  <div id="wizard-modal" class="wizard-overlay hidden">
+    <div class="wizard-container">
+      <div class="wizard-progress" id="wizard-progress"></div>
+      <div class="wizard-content" id="wizard-content"></div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settings-modal" class="modal-wrap hidden">
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-drag-area">
+        <div class="modal-handle"></div>
+      </div>
+      <div class="modal-body" id="settings-body"></div>
+    </div>
+  </div>
+
+  <script src="/health.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
