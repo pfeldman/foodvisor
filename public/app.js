@@ -1561,28 +1561,19 @@ const WIZARD_STEPS = [
               }
             }
 
-            let weightVal = null, heightVal = null;
-            if (authOk) {
-              try {
-                const now = new Date().toISOString();
-                const ago = new Date(Date.now() - 90 * 86400000).toISOString();
-                const wRes = await hp.query({ type: 'weight', startDate: ago, endDate: now, limit: 1 });
-                alert('DEBUG 4 - weight raw: ' + JSON.stringify(wRes));
-                if (wRes?.data?.length > 0) weightVal = wRes.data[0].value;
-              } catch (e) {
-                alert('DEBUG 4 - weight error: ' + e.message);
-              }
-
-              try {
-                const now = new Date().toISOString();
-                const ago = new Date(Date.now() - 365 * 86400000).toISOString();
-                const hRes = await hp.query({ type: 'height', startDate: ago, endDate: now, limit: 1 });
-                alert('DEBUG 5 - height raw: ' + JSON.stringify(hRes));
-                if (hRes?.data?.length > 0) heightVal = hRes.data[0].value;
-              } catch (e) {
-                alert('DEBUG 5 - height error: ' + e.message);
-              }
+            // List all methods on the plugin to find the right API
+            const methods = [];
+            for (const key in hp) {
+              if (typeof hp[key] === 'function') methods.push(key);
             }
+            // Also check prototype
+            const proto = Object.getPrototypeOf(hp) || {};
+            for (const key of Object.getOwnPropertyNames(proto)) {
+              if (typeof proto[key] === 'function' && key !== 'constructor') methods.push(key);
+            }
+            alert('DEBUG 4 - plugin methods: ' + methods.join(', '));
+
+            let weightVal = null, heightVal = null;
 
             let healthResult = null;
             if (weightVal || heightVal) {
