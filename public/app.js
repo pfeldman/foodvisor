@@ -175,8 +175,6 @@ function setupNav() {
 
 // ─── Routing ──────────────────────────────────────
 function renderView(view) {
-  // Toggle nuri mode on main (removes bottom padding)
-  $('main').classList.toggle('nuri-mode', view === 'nuri');
   state.view = view;
   const main = $('main');
   if (view === 'today')        renderToday(main);
@@ -609,15 +607,9 @@ function renderNuri(container) {
     }
   });
 
-  // Scroll chat to bottom
-  const chatEl = $('nuri-chat');
-  setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
-
-  // On focus, scroll to bottom after keyboard animation
-  const input = $('nuri-input');
-  input?.addEventListener('focus', () => {
-    setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 300);
-  });
+  // Scroll main to bottom so latest messages + input are visible
+  const mainEl = $('main');
+  setTimeout(() => { mainEl.scrollTop = mainEl.scrollHeight; }, 100);
 }
 
 async function sendNuriMessage(text) {
