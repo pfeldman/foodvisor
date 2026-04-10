@@ -1,7 +1,7 @@
 /* ===================================================
-   FOODVISOR — App Logic v2
-   New: Wizard, ingredients, macros, quality scores,
-        bookmarkable metrics, Coach Nuri, recommendations
+   FOODVISOR — App Logic v3
+   Redesign: Home dashboard, water, fasting, streak,
+   weight graph, photo entries, profile view
    =================================================== */
 
 // ─── State ────────────────────────────────────────
@@ -11,8 +11,9 @@ const state = {
   selectedDay: null,
   pendingResult: null,
   pendingImageDataUrl: null,
-  nuriMessages: [],       // chat history for current session
+  nuriMessages: [],
   nuriLoading: false,
+  fastingInterval: null,
 };
 
 // ─── Utils ────────────────────────────────────────
@@ -143,6 +144,85 @@ const DB = {
   },
 };
 
+// ─── Water Tracking ──────────────────────────────
+const Water = {
+  KEY: 'foodvisor_water',
+  load() { try { return JSON.parse(localStorage.getItem(this.KEY) || '{}'); } catch { return {}; } },
+  save(data) { localStorage.setItem(this.KEY, JSON.stringify(data)); },
+  getToday() { const d = this.load(); return d[fmt.iso(new Date())] || 0; },
+  add() {
+    const d = this.load();
+    const today = fmt.iso(new Date());
+    d[today] = (d[today] || 0) + 1;
+    this.save(d);
+    return d[today];
+  },
+  remove() {
+    const d = this.load();
+    const today = fmt.iso(new Date());
+    d[today] = Math.max(0, (d[today] || 0) - 1);
+    this.save(d);
+    return d[today];
+  },
+  getForDate(iso) { return this.load()[iso] || 0; },
+  TARGET: 8,
+};
+
+// ─── Fasting Timer ───────────────────────────────
+const Fasting = {
+  KEY: 'foodvisor_fasting',
+  load() { try { return JSON.parse(localStorage.getItem(this.KEY) || 'null'); } catch { return null; } },
+  save(data) { localStorage.setItem(this.KEY, JSON.stringify(data)); },
+  start(hours = 16) {
+    this.save({ startTime: new Date().toISOString(), duration: hours, active: true });
+  },
+  stop() {
+    const d = this.load();
+    if (d) { d.active = false; this.save(d); }
+  },
+  getStatus() {
+    const d = this.load();
+    if (!d || !d.active) return { active: false };
+    const start = new Date(d.startTime).getTime();
+    const now = Date.now();
+    const elapsed = (now - start) / 3600000; // hours
+    const remaining = Math.max(0, d.duration - elapsed);
+    const progress = Math.min(1, elapsed / d.duration);
+    const done = remaining <= 0;
+    return { active: true, elapsed, remaining, progress, done, duration: d.duration };
+  },
+};
+
+// ─── Streak Calculator ───────────────────────────
+function getStreak() {
+  const entries = DB.all();
+  const dates = new Set(entries.map(e => e.date));
+  let streak = 0;
+  const d = new Date();
+  // Check today first
+  if (dates.has(fmt.iso(d))) streak++;
+  // Go backwards
+  d.setDate(d.getDate() - 1);
+  while (dates.has(fmt.iso(d))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  // If no entry today, check if yesterday started the streak
+  if (streak === 0) {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    if (dates.has(fmt.iso(y))) {
+      streak = 1;
+      y.setDate(y.getDate() - 1);
+      while (dates.has(fmt.iso(y))) {
+        streak++;
+        y.setDate(y.getDate() - 1);
+      }
+    }
+  }
+  return streak;
+}
+
 // ─── Init ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   state.selectedDay = fmt.iso(new Date());
@@ -187,47 +267,80 @@ function renderView(view) {
   else if (view === 'week')    renderWeek(main);
   else if (view === 'nuri')    renderNuri(main);
   else if (view === 'history') renderHistory(main);
+  else if (view === 'profile') renderProfile(main);
 }
 
 // ─── TODAY VIEW ───────────────────────────────────
 function renderToday(container) {
   const todayIso = fmt.iso(new Date());
   const entries  = DB.byDate(todayIso).sort((a, b) => a.created_at.localeCompare(b.created_at));
-  const totalCal = entries.reduce((s, e) => s + (e.totales?.calorias || e.calories || 0), 0);
   const meals    = entries.length;
-
-  // Aggregate macros for bookmarked metrics
-  const metrics = Profile.getMetrics();
-  const tdee = Profile.getTDEE();
-  const totals = aggregateMacros(entries);
+  const metrics  = Profile.getMetrics();
+  const totals   = aggregateMacros(entries);
+  const streak   = getStreak();
+  const water    = Water.getToday();
+  const fasting  = Fasting.getStatus();
 
   container.innerHTML = `
     <div class="today-view">
-      <div class="capture-hero">
-        <button class="capture-btn" id="capture-btn">
-          <div class="capture-glow"></div>
-          <div class="capture-grain"></div>
-          <div class="capture-inner">
-            <div class="capture-ring">
-              <div class="pulse-outer"></div>
-              <div class="pulse-inner"></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
-            <span class="capture-title">Fotografia tu comida</span>
-            <span class="capture-sub">La IA identifica ingredientes y nutrientes</span>
+      <!-- Streak + date strip -->
+      <div class="home-top-bar">
+        <span class="home-date">${capitalize(new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }))}</span>
+        ${streak > 0 ? `<span class="streak-badge" title="${streak} dias consecutivos">&#128293; ${streak}</span>` : ''}
+      </div>
+
+      <!-- Camera button (compact) -->
+      <div class="capture-compact">
+        <button class="capture-btn-compact" id="capture-btn">
+          <div class="capture-btn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <div class="capture-btn-text">
+            <span class="capture-btn-title">Fotografia tu comida</span>
+            <span class="capture-btn-sub">IA analiza ingredientes y nutrientes</span>
           </div>
         </button>
       </div>
 
-      <div class="metrics-grid" id="metrics-grid">
-        ${renderMetricCards(totals, metrics, tdee, meals)}
+      <!-- Metrics strip -->
+      <div class="metrics-grid">${renderMetricCards(totals, metrics, null, meals)}</div>
+
+      <!-- Water tracker -->
+      <div class="water-section">
+        <div class="water-header">
+          <span class="section-label" style="margin:0">Agua</span>
+          <span class="water-count">${water} / ${Water.TARGET}</span>
+        </div>
+        <div class="water-drops">
+          ${Array.from({ length: Water.TARGET }, (_, i) => `
+            <button class="water-drop ${i < water ? 'filled' : ''}" data-water-idx="${i}">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z" fill="${i < water ? 'var(--accent)' : 'none'}" stroke="${i < water ? 'var(--accent)' : 'var(--border)'}" stroke-width="1.5"/></svg>
+            </button>
+          `).join('')}
+        </div>
       </div>
 
+      <!-- Fasting timer (if active) -->
+      ${fasting.active ? `
+        <div class="fasting-card">
+          <div class="fasting-header">
+            <span class="fasting-label">&#9201; Ayuno ${fasting.duration}h</span>
+            <span class="fasting-time" id="fasting-time">${fasting.done ? 'Completado!' : `${Math.floor(fasting.remaining)}h ${Math.round((fasting.remaining % 1) * 60)}m restantes`}</span>
+          </div>
+          <div class="fasting-bar">
+            <div class="fasting-bar-fill ${fasting.done ? 'done' : ''}" style="width:${Math.round(fasting.progress * 100)}%"></div>
+          </div>
+          <button class="fasting-stop" id="btn-stop-fast">Finalizar ayuno</button>
+        </div>
+      ` : ''}
+
+      <!-- Goals -->
       ${renderGoalsSection(totals)}
 
+      <!-- Entry list -->
       <div class="entries-wrap">
         ${entries.length > 0 ? `
           <div class="section-label">Registro de hoy</div>
@@ -243,9 +356,39 @@ function renderToday(container) {
     </div>
   `;
 
-  $('capture-btn').addEventListener('click', () => {
-    $('camera-input').click();
+  // Camera
+  $('capture-btn').addEventListener('click', () => $('camera-input').click());
+
+  // Water drops
+  container.querySelectorAll('.water-drop').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.waterIdx);
+      const current = Water.getToday();
+      if (idx < current) { Water.remove(); } else { Water.add(); }
+      vibrate([8]);
+      renderView('today');
+    });
   });
+
+  // Fasting stop
+  const stopBtn = $('btn-stop-fast');
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => { Fasting.stop(); renderView('today'); });
+  }
+
+  // Update fasting timer live
+  if (fasting.active && !fasting.done) {
+    if (state.fastingInterval) clearInterval(state.fastingInterval);
+    state.fastingInterval = setInterval(() => {
+      const s = Fasting.getStatus();
+      const el = $('fasting-time');
+      if (el && s.active) {
+        el.textContent = s.done ? 'Completado!' : `${Math.floor(s.remaining)}h ${Math.round((s.remaining % 1) * 60)}m restantes`;
+      } else {
+        clearInterval(state.fastingInterval);
+      }
+    }, 60000);
+  }
 
   bindDeleteButtons(container, () => renderView('today'));
 }
@@ -816,6 +959,172 @@ function bindNuriFoodSaveButtons() {
   });
 }
 
+// ─── PROFILE VIEW ─────────────────────────────────
+function renderProfile(container) {
+  const profile = Profile.load() || {};
+  const fasting = Fasting.getStatus();
+  const streak = getStreak();
+
+  container.innerHTML = `
+    <div class="profile-view">
+      <div class="profile-header">
+        <div class="profile-name">${escHtml(profile.nombre || 'Tu perfil')}</div>
+        <div class="profile-sub">${streak > 0 ? `&#128293; ${streak} dias de racha` : ''}</div>
+      </div>
+
+      <!-- Weight graph -->
+      <div class="profile-section">
+        <div class="section-label">Peso</div>
+        <div class="weight-card">
+          <div class="weight-current">${profile.peso ? profile.peso + ' kg' : 'Sin datos'}</div>
+          <canvas id="weight-canvas" width="340" height="100"></canvas>
+        </div>
+      </div>
+
+      <!-- Fasting -->
+      <div class="profile-section">
+        <div class="section-label">Ayuno intermitente</div>
+        <div class="fasting-config">
+          ${fasting.active ? `
+            <div class="fasting-active-card">
+              <div class="fasting-header">
+                <span>&#9201; Ayuno de ${fasting.duration}h en curso</span>
+                <span>${fasting.done ? 'Completado!' : `${Math.floor(fasting.remaining)}h ${Math.round((fasting.remaining % 1) * 60)}m`}</span>
+              </div>
+              <div class="fasting-bar"><div class="fasting-bar-fill ${fasting.done ? 'done' : ''}" style="width:${Math.round(fasting.progress * 100)}%"></div></div>
+              <button class="btn-secondary" id="btn-stop-fasting" style="margin-top:8px;width:100%">Finalizar ayuno</button>
+            </div>
+          ` : `
+            <div class="fasting-options">
+              <button class="fasting-opt" data-hours="16">16:8</button>
+              <button class="fasting-opt" data-hours="18">18:6</button>
+              <button class="fasting-opt" data-hours="20">20:4</button>
+              <button class="fasting-opt" data-hours="14">14:10</button>
+            </div>
+            <div class="fasting-hint">Toca un protocolo para iniciar el ayuno</div>
+          `}
+        </div>
+      </div>
+
+      <!-- History link -->
+      <div class="profile-section">
+        <div class="section-label">Historial</div>
+        <button class="profile-link-btn" id="btn-go-history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Ver historial y exportar
+        </button>
+      </div>
+
+      <!-- Settings link -->
+      <div class="profile-section">
+        <div class="section-label">Configuracion</div>
+        <button class="profile-link-btn" id="btn-go-settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Metricas y perfil
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Fasting buttons
+  container.querySelectorAll('.fasting-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Fasting.start(parseInt(btn.dataset.hours));
+      vibrate([10, 20, 10]);
+      renderView('profile');
+    });
+  });
+
+  const stopFast = $('btn-stop-fasting');
+  if (stopFast) stopFast.addEventListener('click', () => { Fasting.stop(); renderView('profile'); });
+
+  $('btn-go-history')?.addEventListener('click', () => renderHistory(container));
+  $('btn-go-settings')?.addEventListener('click', () => showSettings());
+
+  // Draw weight graph
+  drawWeightGraph();
+}
+
+async function drawWeightGraph() {
+  const canvas = $('weight-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Try to get weight data from Health
+  let points = [];
+  if (typeof Health !== 'undefined' && await Health.isAvailable()) {
+    try {
+      const hp = window.Capacitor?.Plugins?.Health;
+      if (hp) {
+        const ago = new Date(Date.now() - 90 * 86400000).toISOString();
+        const now = new Date().toISOString();
+        const res = await hp.readSamples({ dataType: 'weight', startDate: ago, endDate: now, limit: 30 });
+        const samples = res?.samples || [];
+        points = samples.map(s => ({ date: new Date(s.startDate || s.endDate), value: s.value }))
+          .sort((a, b) => a.date - b.date);
+      }
+    } catch (e) { console.warn('Weight graph error:', e); }
+  }
+
+  // Fallback: just show current weight as a flat line
+  if (points.length === 0) {
+    const profile = Profile.load();
+    if (profile?.peso) {
+      ctx.strokeStyle = 'var(--border)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-3');
+      ctx.font = '12px Plus Jakarta Sans';
+      ctx.fillText('Sin historial de peso', w / 2 - 50, h / 2 - 10);
+    }
+    return;
+  }
+
+  // Draw sparkline
+  const minV = Math.min(...points.map(p => p.value)) - 0.5;
+  const maxV = Math.max(...points.map(p => p.value)) + 0.5;
+  const range = maxV - minV || 1;
+
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+
+  ctx.beginPath();
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+
+  points.forEach((p, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - ((p.value - minV) / range) * (h - 20) - 10;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill gradient below
+  const last = points[points.length - 1];
+  const lastX = w;
+  const lastY = h - ((last.value - minV) / range) * (h - 20) - 10;
+  ctx.lineTo(lastX, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, accent + '30');
+  grad.addColorStop(1, accent + '05');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Last point dot
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = accent;
+  ctx.fill();
+}
+
 // ─── HISTORY VIEW ─────────────────────────────────
 function renderHistory(container) {
   const today   = fmt.iso(new Date());
@@ -944,9 +1253,11 @@ function renderEntryCard(entry) {
 
   const pillData = escHtml(JSON.stringify(pillValues));
 
+  const hasPhoto = entry.photo;
+
   return `
     <div class="entry-card" data-entry-id="${escHtml(entry.id)}">
-      <span class="entry-time">${escHtml(time)}</span>
+      ${hasPhoto ? `<img class="entry-thumb" src="${entry.photo}" alt="">` : `<span class="entry-time">${escHtml(time)}</span>`}
       <div class="entry-info entry-tap" data-entry-detail="${escHtml(entry.id)}">
         <div class="entry-name">${escHtml(entry.dish_name)}</div>
         ${entry.description ? `<div class="entry-desc">${escHtml(entry.description)}</div>` : ''}
@@ -1396,6 +1707,7 @@ function saveEntry() {
     ingredientes:  state.pendingIngredients,
     totales,
     calidad:       state.pendingResult?.calidad || null,
+    photo:         state.pendingImageDataUrl || null,
   };
   DB.add(entry);
 
@@ -1478,7 +1790,6 @@ function setupExportModal() {
 
 // ─── Settings ─────────────────────────────────────
 function setupSettings() {
-  $('btn-settings').addEventListener('click', showSettings);
   $('settings-backdrop').addEventListener('click', () => {
     $('settings-modal').classList.add('hidden');
   });
