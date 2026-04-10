@@ -8,7 +8,7 @@
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
-    "@perfood/capacitor-healthkit": "^1.3.2",
+    "@capgo/capacitor-health": "^8.4.5",
     "openai": "^4.0.0"
   }
 }
