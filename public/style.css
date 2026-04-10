@@ -816,18 +816,18 @@ body.nuri-locked {
 }
 
 .nuri-back {
-  background: none;
-  border: none;
-  color: var(--text-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.nuri-back:active { color: var(--accent); }
+.nuri-back:active { background: var(--accent); color: white; border-color: var(--accent); }
 
 .nuri-avatar {
   width: 42px;
