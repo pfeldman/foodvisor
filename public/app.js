@@ -265,21 +265,56 @@ const METRIC_META = {
   fibra:          { label: 'Fibra',     unit: 'g',    color: '#5B8C5A' },
 };
 
+function getTargets() {
+  const profile = Profile.load();
+  if (!profile) return null;
+  const tdee = Profile.getTDEE();
+  if (!tdee) return null;
+
+  const peso = profile.peso || 70;
+  let calTarget = tdee;
+  let protTarget;
+
+  switch (profile.objetivo) {
+    case 'bajar':
+      calTarget = Math.round(tdee * 0.8);
+      protTarget = Math.round(peso * 2);
+      break;
+    case 'subir':
+      calTarget = Math.round(tdee * 1.15);
+      protTarget = Math.round(peso * 2.2);
+      break;
+    default:
+      protTarget = Math.round(peso * 1.6);
+      break;
+  }
+
+  const protCal = protTarget * 4;
+  const remaining = calTarget - protCal;
+  const carbTarget = Math.round((remaining * 0.55) / 4);
+  const fatTarget = Math.round((remaining * 0.45) / 9);
+  const fiberTarget = 30; // general recommendation
+
+  return { calorias: calTarget, proteinas: protTarget, carbohidratos: carbTarget, grasas: fatTarget, fibra: fiberTarget };
+}
+
 function renderMetricCards(totals, metrics, tdee, meals) {
+  const targets = getTargets();
   let html = '';
+
   metrics.forEach(key => {
     const meta = METRIC_META[key];
     if (!meta) return;
     const val = Math.round(totals[key] || 0);
-    // For calories, show progress vs TDEE if available
+    const target = targets?.[key];
     let progressHtml = '';
-    if (key === 'calorias' && tdee) {
-      const pct = Math.min(100, Math.round((val / tdee) * 100));
+    if (target) {
+      const pct = Math.min(100, Math.round((val / target) * 100));
       progressHtml = `
         <div class="metric-progress">
           <div class="metric-progress-bar" style="width:${pct}%;background:${meta.color}"></div>
         </div>
-        <div class="metric-target">${fmt.number(tdee)} objetivo</div>
+        <div class="metric-target">${fmt.number(target)} ${meta.unit}</div>
       `;
     }
     html += `
@@ -292,7 +327,6 @@ function renderMetricCards(totals, metrics, tdee, meals) {
     `;
   });
 
-  // Always show meals count
   html += `
     <div class="metric-card">
       <div class="metric-value neutral">${meals}</div>
@@ -304,44 +338,15 @@ function renderMetricCards(totals, metrics, tdee, meals) {
 }
 
 function renderGoalsSection(totals) {
-  const profile = Profile.load();
-  if (!profile) return '';
-
-  const tdee = Profile.getTDEE();
-  if (!tdee) return '';
-
-  // Calculate daily targets based on objective
-  let calTarget = tdee;
-  let protTarget, carbTarget, fatTarget;
-
-  const peso = profile.peso || 70;
-
-  switch (profile.objetivo) {
-    case 'bajar':
-      calTarget = Math.round(tdee * 0.8);  // 20% deficit
-      protTarget = Math.round(peso * 2);     // high protein to preserve muscle
-      break;
-    case 'subir':
-      calTarget = Math.round(tdee * 1.15);  // 15% surplus
-      protTarget = Math.round(peso * 2.2);
-      break;
-    case 'mantener':
-    default:
-      protTarget = Math.round(peso * 1.6);
-      break;
-  }
-
-  // Protein calories = protTarget * 4, rest split 45/55 carbs/fat
-  const protCal = protTarget * 4;
-  const remaining = calTarget - protCal;
-  carbTarget = Math.round((remaining * 0.55) / 4);
-  fatTarget = Math.round((remaining * 0.45) / 9);
+  const targets = getTargets();
+  if (!targets) return '';
 
   const goals = [
-    { key: 'calorias', label: 'Calorias', current: totals.calorias, target: calTarget, unit: 'kcal', color: 'var(--accent)' },
-    { key: 'proteinas', label: 'Proteina', current: totals.proteinas, target: protTarget, unit: 'g', color: 'var(--green)' },
-    { key: 'carbohidratos', label: 'Carbos', current: totals.carbohidratos, target: carbTarget, unit: 'g', color: 'var(--amber)' },
-    { key: 'grasas', label: 'Grasas', current: totals.grasas, target: fatTarget, unit: 'g', color: '#8B6CC1' },
+    { key: 'calorias', label: 'Calorias', current: totals.calorias, target: targets.calorias, unit: 'kcal', color: 'var(--accent)' },
+    { key: 'proteinas', label: 'Proteina', current: totals.proteinas, target: targets.proteinas, unit: 'g', color: 'var(--green)' },
+    { key: 'carbohidratos', label: 'Carbos', current: totals.carbohidratos, target: targets.carbohidratos, unit: 'g', color: 'var(--amber)' },
+    { key: 'grasas', label: 'Grasas', current: totals.grasas, target: targets.grasas, unit: 'g', color: '#8B6CC1' },
+    { key: 'fibra', label: 'Fibra', current: totals.fibra, target: targets.fibra, unit: 'g', color: '#5B8C5A' },
   ];
 
   return `
@@ -823,21 +828,31 @@ function runHistorySearch() {
 // ─── Entry Card ───────────────────────────────────
 function renderEntryCard(entry) {
   const time = fmt.time(entry.created_at);
-  const cal = entry.totales?.calorias || entry.calories || 0;
-  const prot = entry.totales?.proteinas || 0;
-  const hasQuality = entry.calidad && (entry.calidad.metabolico || entry.calidad.digestivo || entry.calidad.cardiovascular);
+  const t = entry.totales || {};
+  const cal = t.calorias || entry.calories || 0;
+  const prot = Math.round(t.proteinas || 0);
+  const carbs = Math.round(t.carbohidratos || 0);
+  const fat = Math.round(t.grasas || 0);
+  const fiber = Math.round(t.fibra || 0);
+
+  // Build rotating values for the pill
+  const pillValues = [`${fmt.number(cal)} kcal`];
+  if (prot > 0) pillValues.push(`${prot}g prot`);
+  if (carbs > 0) pillValues.push(`${carbs}g carbs`);
+  if (fat > 0) pillValues.push(`${fat}g grasas`);
+  if (fiber > 0) pillValues.push(`${fiber}g fibra`);
+
+  const pillData = escHtml(JSON.stringify(pillValues));
 
   return `
-    <div class="entry-card">
+    <div class="entry-card" data-entry-id="${escHtml(entry.id)}">
       <span class="entry-time">${escHtml(time)}</span>
-      <div class="entry-info">
+      <div class="entry-info entry-tap" data-entry-detail="${escHtml(entry.id)}">
         <div class="entry-name">${escHtml(entry.dish_name)}</div>
         ${entry.description ? `<div class="entry-desc">${escHtml(entry.description)}</div>` : ''}
-        ${prot > 0 ? `<div class="entry-macros-mini">P:${Math.round(prot)}g C:${Math.round(entry.totales?.carbohidratos || 0)}g G:${Math.round(entry.totales?.grasas || 0)}g</div>` : ''}
       </div>
       <div class="entry-right">
-        <span class="entry-kcal">${fmt.number(cal)} kcal</span>
-        ${hasQuality ? renderQualityDots(entry.calidad) : ''}
+        <span class="entry-pill" data-pill-values="${pillData}">${pillValues[0]}</span>
       </div>
       <button class="entry-del" data-del="${escHtml(entry.id)}" title="Eliminar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -851,11 +866,90 @@ function renderEntryCard(entry) {
   `;
 }
 
-function renderQualityDots(calidad) {
-  if (!calidad) return '';
-  const levels = [calidad.metabolico?.nivel, calidad.digestivo?.nivel, calidad.cardiovascular?.nivel].filter(Boolean);
-  if (levels.length === 0) return '';
-  return `<div class="quality-dots">${levels.map(l => `<span class="q-dot q-${l}"></span>`).join('')}</div>`;
+// Rotate pill values every 2.5 seconds
+let pillInterval = null;
+function startPillRotation() {
+  if (pillInterval) clearInterval(pillInterval);
+  let idx = 1;
+  pillInterval = setInterval(() => {
+    document.querySelectorAll('.entry-pill[data-pill-values]').forEach(pill => {
+      try {
+        const values = JSON.parse(pill.dataset.pillValues);
+        if (values.length <= 1) return;
+        pill.classList.add('pill-fade');
+        setTimeout(() => {
+          pill.textContent = values[idx % values.length];
+          pill.classList.remove('pill-fade');
+        }, 150);
+      } catch {}
+    });
+    idx++;
+  }, 2500);
+}
+
+function showEntryDetail(entryId) {
+  const entries = DB.all();
+  const entry = entries.find(e => e.id === entryId);
+  if (!entry) return;
+
+  const t = entry.totales || {};
+  const cal = t.calorias || entry.calories || 0;
+  const calidad = entry.calidad;
+
+  let qualityHtml = '';
+  if (calidad) {
+    const axes = [
+      { key: 'metabolico', label: 'Metabolico', icon: '&#9889;' },
+      { key: 'digestivo', label: 'Digestivo', icon: '&#129744;' },
+      { key: 'cardiovascular', label: 'Cardiovascular', icon: '&#10084;' },
+    ];
+    const levelLabels = { 1: 'Pobre', 2: 'Regular', 3: 'Bueno', 4: 'Excelente' };
+    qualityHtml = axes.map(ax => {
+      const d = calidad[ax.key];
+      if (!d) return '';
+      const nivel = d.nivel || 2;
+      const pct = Math.round((nivel / 4) * 100);
+      return `
+        <div class="quality-bar-item" style="margin-bottom:6px">
+          <div class="quality-bar-header"><span class="quality-bar-label">${ax.icon} ${ax.label}</span><span class="quality-bar-level q-text-${nivel}">${levelLabels[nivel]}</span></div>
+          <div class="quality-bar-track"><div class="quality-bar-fill q-fill-${nivel}" style="width:${pct}%"></div></div>
+          ${d.detalle ? `<div class="quality-bar-detail">${escHtml(d.detalle)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  const ingredientsHtml = (entry.ingredientes || []).map(i => `
+    <div class="detail-ing">${escHtml(i.nombre)} <span class="detail-ing-g">${i.gramos}g — ${i.calorias} kcal</span></div>
+  `).join('');
+
+  const body = $('settings-body');
+  body.innerHTML = `
+    <h2 class="modal-title">${escHtml(entry.dish_name)}</h2>
+    ${entry.description ? `<p class="result-desc">${escHtml(entry.description)}</p>` : ''}
+
+    <div class="macro-bar" style="margin-bottom:14px">
+      <div class="macro-item"><span class="macro-val" style="color:var(--accent)">${cal}</span><span class="macro-lbl">Kcal</span></div>
+      <div class="macro-item"><span class="macro-val" style="color:var(--green)">${Math.round(t.proteinas || 0)}g</span><span class="macro-lbl">Prot</span></div>
+      <div class="macro-item"><span class="macro-val" style="color:var(--amber)">${Math.round(t.carbohidratos || 0)}g</span><span class="macro-lbl">Carbs</span></div>
+      <div class="macro-item"><span class="macro-val" style="color:#8B6CC1">${Math.round(t.grasas || 0)}g</span><span class="macro-lbl">Grasas</span></div>
+      <div class="macro-item"><span class="macro-val" style="color:#5B8C5A">${Math.round(t.fibra || 0)}g</span><span class="macro-lbl">Fibra</span></div>
+    </div>
+
+    ${qualityHtml ? `<div style="margin-bottom:14px">${qualityHtml}</div>` : ''}
+
+    ${ingredientsHtml ? `
+      <div class="field-label" style="margin-bottom:6px">Ingredientes</div>
+      ${ingredientsHtml}
+    ` : ''}
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="btn-close-detail">Cerrar</button>
+    </div>
+  `;
+
+  $('settings-modal').classList.remove('hidden');
+  $('btn-close-detail').addEventListener('click', () => $('settings-modal').classList.add('hidden'));
 }
 
 function bindDeleteButtons(container, onDelete) {
@@ -867,6 +961,16 @@ function bindDeleteButtons(container, onDelete) {
       onDelete();
     });
   });
+
+  // Bind tap on entry info to show detail
+  container.querySelectorAll('.entry-tap').forEach(el => {
+    el.addEventListener('click', () => {
+      showEntryDetail(el.dataset.entryDetail);
+    });
+  });
+
+  // Start pill rotation
+  startPillRotation();
 }
 
 // ─── Camera & Analysis ────────────────────────────
