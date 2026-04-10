@@ -1570,12 +1570,21 @@ const WIZARD_STEPS = [
 
             let healthResult = (weightVal || heightVal) ? { weight: weightVal, height: heightVal } : null;
 
-            // Try to read name from Contacts
+            // Try to read name + age from Contacts
             let ownerName = null;
-
-            if (ownerName && !wizardData.nombre) {
-              wizardData.nombre = ownerName;
+            let ownerAge = null;
+            try {
+              if (typeof Health !== 'undefined' && Health.getOwnerInfo) {
+                const info = await Health.getOwnerInfo();
+                if (info?.name) ownerName = info.name;
+                if (info?.age) ownerAge = info.age;
+              }
+            } catch (e) {
+              console.warn('Contacts error:', e);
             }
+
+            if (ownerName && !wizardData.nombre) wizardData.nombre = ownerName;
+            if (ownerAge && !wizardData.edad) wizardData.edad = ownerAge;
             if (healthResult) {
               if (healthResult.weight) wizardData.peso = healthResult.weight;
               if (healthResult.height) wizardData.altura = healthResult.height;
@@ -1583,9 +1592,10 @@ const WIZARD_STEPS = [
             wizardData.healthSync = true;
 
             const parts = [];
-            if (ownerName) parts.push(`Nombre: ${ownerName}`);
-            if (healthResult?.weight) parts.push(`Peso: ${healthResult.weight}kg`);
-            if (healthResult?.height) parts.push(`Altura: ${healthResult.height}cm`);
+            if (ownerName) parts.push(`${ownerName}`);
+            if (ownerAge) parts.push(`${ownerAge} anios`);
+            if (healthResult?.weight) parts.push(`${healthResult.weight}kg`);
+            if (healthResult?.height) parts.push(`${healthResult.height}cm`);
 
             if (parts.length > 0) {
               statusEl.innerHTML = `Sincronizado! ${parts.join(' | ')}`;

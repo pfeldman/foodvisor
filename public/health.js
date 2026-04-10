@@ -119,7 +119,8 @@ const Health = {
     return false;
   },
 
-  async getOwnerName() {
+  /** Read owner's name and birthday from Contacts */
+  async getOwnerInfo() {
     try {
       if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return null;
 
@@ -130,13 +131,30 @@ const Health = {
       const perm = await contacts.requestPermissions();
       if (perm.contacts !== 'granted') return null;
 
-      const result = await contacts.getContacts({ projection: { name: true } });
+      const result = await contacts.getContacts({
+        projection: { name: true, birthday: true },
+      });
+
       if (result?.contacts?.length > 0) {
         const me = result.contacts.find(c => c.name?.given) || result.contacts[0];
-        return me?.name?.given || null;
+        const info = { name: me?.name?.given || me?.givenName || null };
+
+        // Calculate age from birthday
+        const bday = me?.birthday;
+        if (bday?.year && bday?.month && bday?.day) {
+          const today = new Date();
+          let age = today.getFullYear() - bday.year;
+          const monthDiff = today.getMonth() + 1 - bday.month;
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < bday.day)) {
+            age--;
+          }
+          if (age > 0 && age < 120) info.age = age;
+        }
+
+        return info;
       }
     } catch (err) {
-      console.warn('Failed to read owner name:', err);
+      console.warn('Failed to read owner info:', err);
     }
     return null;
   },
