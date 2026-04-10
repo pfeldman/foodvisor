@@ -1534,71 +1534,32 @@ const WIZARD_STEPS = [
           syncBtn.disabled = true;
 
           try {
-            // DEBUG: step-by-step health check
             const hp = window.Capacitor?.Plugins?.Health || null;
-            alert('DEBUG 1 - Health plugin: ' + (hp ? 'found' : 'null'));
+            let weightVal = null;
 
-            let avail = false;
-            try {
-              const availResult = await hp.isAvailable();
-              avail = availResult?.available === true;
-              alert('DEBUG 2 - isAvailable raw: ' + JSON.stringify(availResult));
-            } catch (e) {
-              alert('DEBUG 2 - isAvailable error: ' + e.message);
-            }
-
-            let authOk = false;
-            if (avail) {
+            if (hp) {
               try {
-                const authResult = await hp.requestAuthorization({
-                  read: ['weight', 'height', 'steps'],
-                  write: ['calories'],
-                });
-                authOk = true;
-                alert('DEBUG 3 - auth raw: ' + JSON.stringify(authResult));
-              } catch (e) {
-                alert('DEBUG 3 - auth error: ' + e.message);
-              }
-            }
+                const availResult = await hp.isAvailable();
+                if (availResult?.available) {
+                  await hp.requestAuthorization({
+                    read: ['weight', 'steps'],
+                    write: ['calories'],
+                  });
 
-            let weightVal = null, heightVal = null;
-            if (authOk) {
-              const now = new Date().toISOString();
-              const ago90 = new Date(Date.now() - 90 * 86400000).toISOString();
-
-              try {
-                const wRes = await hp.readSamples({ dataType: 'weight', startDate: ago90, endDate: now, limit: 1 });
-                alert('DEBUG weight raw: ' + JSON.stringify(wRes).slice(0, 300));
-                const samples = wRes?.samples || wRes?.data || wRes?.results || [];
-                if (samples.length > 0) weightVal = Math.round(samples[0].value * 10) / 10;
-              } catch (e) {
-                alert('DEBUG weight error: ' + e.message);
-              }
-
-              // Try multiple type names for height
-              const heightTypes = ['height', 'bodyHeight', 'body_height', 'HKQuantityTypeIdentifierHeight'];
-              const ago365 = new Date(Date.now() - 365 * 86400000).toISOString();
-              for (const ht of heightTypes) {
-                try {
-                  const hRes = await hp.readSamples({ dataType: ht, startDate: ago365, endDate: now, limit: 1 });
-                  const samples = hRes?.samples || hRes?.data || hRes?.results || [];
-                  alert('DEBUG height "' + ht + '": ' + JSON.stringify(hRes).slice(0, 200));
-                  if (samples.length > 0) {
-                    const v = samples[0].value;
-                    heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
-                    break;
-                  }
-                } catch (e) {
-                  alert('DEBUG height "' + ht + '" error: ' + e.message);
+                  const now = new Date().toISOString();
+                  const ago = new Date(Date.now() - 90 * 86400000).toISOString();
+                  const wRes = await hp.readSamples({ dataType: 'weight', startDate: ago, endDate: now, limit: 1 });
+                  const samples = wRes?.samples || wRes?.data || [];
+                  if (samples.length > 0) weightVal = Math.round(samples[0].value * 10) / 10;
                 }
+              } catch (e) {
+                console.warn('Health sync error:', e);
               }
             }
 
-            let healthResult = null;
-            if (weightVal || heightVal) {
-              healthResult = { weight: weightVal, height: heightVal };
-            }
+            let healthResult = weightVal ? { weight: weightVal } : null;
 
+            // Try to read name from Contacts
             let ownerName = null;
 
             if (ownerName && !wizardData.nombre) {
