@@ -45,7 +45,7 @@ const Health = {
 
     try {
       await this._plugin.requestAuthorization({
-        read: ['weight', 'steps', 'calories.active', 'heartRate'],
+        read: ['weight', 'height', 'steps', 'calories.active', 'heartRate'],
         write: ['calories'],
       });
       return true;
