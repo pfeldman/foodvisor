@@ -1570,43 +1570,7 @@ const WIZARD_STEPS = [
 
             let healthResult = (weightVal || heightVal) ? { weight: weightVal, height: heightVal } : null;
 
-            // Try to read name + age from Contacts
-            let ownerName = null;
-            let ownerAge = null;
-            try {
-              const cp = window.Capacitor?.Plugins?.Contacts
-                || window.Capacitor?.Plugins?.CapacitorContacts || null;
-
-              if (cp) {
-                const perm = await cp.requestPermissions();
-                alert('DEBUG perm: ' + JSON.stringify(perm));
-
-                const result = await cp.getContacts({
-                  fields: ['givenName', 'familyName', 'birthday'],
-                });
-                const list = result?.contacts || [];
-                alert('DEBUG contacts count: ' + list.length + ', first: ' + JSON.stringify(list[0] || 'none').slice(0, 300));
-
-                if (list.length > 0) {
-                  const me = list.find(c => c.givenName) || list[0];
-                  ownerName = me?.givenName || null;
-                  const bday = me?.birthday;
-                  if (bday?.year) {
-                    const today = new Date();
-                    let age = today.getFullYear() - bday.year;
-                    if (today.getMonth() + 1 < bday.month || (today.getMonth() + 1 === bday.month && today.getDate() < bday.day)) age--;
-                    if (age > 0 && age < 120) ownerAge = age;
-                  }
-                }
-              } else {
-                alert('DEBUG contacts plugin NOT found. Plugins: ' + Object.keys(window.Capacitor?.Plugins || {}).join(', '));
-              }
-            } catch (e) {
-              alert('DEBUG contacts error: ' + e.message);
-            }
-
-            if (ownerName && !wizardData.nombre) wizardData.nombre = ownerName;
-            if (ownerAge && !wizardData.edad) wizardData.edad = ownerAge;
+            // Name and age stay manual — Contacts API can't identify the device owner
             if (healthResult) {
               if (healthResult.weight) wizardData.peso = healthResult.weight;
               if (healthResult.height) wizardData.altura = healthResult.height;
@@ -1614,10 +1578,8 @@ const WIZARD_STEPS = [
             wizardData.healthSync = true;
 
             const parts = [];
-            if (ownerName) parts.push(`${ownerName}`);
-            if (ownerAge) parts.push(`${ownerAge} anios`);
-            if (healthResult?.weight) parts.push(`${healthResult.weight}kg`);
-            if (healthResult?.height) parts.push(`${healthResult.height}cm`);
+            if (healthResult?.weight) parts.push(`Peso: ${healthResult.weight}kg`);
+            if (healthResult?.height) parts.push(`Altura: ${healthResult.height}cm`);
 
             if (parts.length > 0) {
               statusEl.innerHTML = `Sincronizado! ${parts.join(' | ')}`;

@@ -7,9 +7,6 @@ ENTITLEMENTS="ios/App/App/App.entitlements"
 /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Foodvisor needs camera access to photograph your food'" "$INFO_PLIST"
 /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Foodvisor needs photo library access to select food images'" "$INFO_PLIST"
 
-# Contacts permission (to pre-fill user name)
-/usr/libexec/PlistBuddy -c "Add :NSContactsUsageDescription string 'Foodvisor reads your name from Contacts to personalize your experience'" "$INFO_PLIST"
-
 # HealthKit permissions
 /usr/libexec/PlistBuddy -c "Add :NSHealthShareUsageDescription string 'Foodvisor reads your weight, height and activity to personalize your nutritional goals'" "$INFO_PLIST"
 /usr/libexec/PlistBuddy -c "Add :NSHealthUpdateUsageDescription string 'Foodvisor logs your calories and macronutrients to Apple Health'" "$INFO_PLIST"
