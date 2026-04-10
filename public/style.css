@@ -5,36 +5,65 @@
    =================================================== */
 
 :root {
-  --bg:           #111110;
-  --bg-card:      #1C1B18;
-  --bg-elevated:  #252420;
-  --bg-dark:      #0A0A09;
-  --text:         #F0EBE0;
-  --text-2:       #A09A90;
-  --text-3:       #6B6560;
+  --bg:           #FAF7F2;
+  --bg-card:      #FFFFFF;
+  --bg-elevated:  #F0ECE4;
+  --bg-dark:      #1C1814;
+  --bg-glass:     rgba(255,255,255,.72);
+  --bg-glass-nav: rgba(250,247,242,.88);
+  --text:         #1A1714;
+  --text-2:       #6B6359;
+  --text-3:       #9E9890;
   --accent:       #D4622A;
   --accent-dk:    #B04A18;
-  --accent-lt:    rgba(212,98,42,.15);
-  --green:        #5DA870;
-  --green-lt:     rgba(93,168,112,.15);
-  --amber:        #D4A040;
-  --amber-lt:     rgba(212,160,64,.15);
-  --red-lt:       rgba(198,40,40,.15);
+  --accent-lt:    rgba(212,98,42,.1);
+  --green:        #3D8B5A;
+  --green-lt:     rgba(61,139,90,.1);
+  --amber:        #C49520;
+  --amber-lt:     rgba(196,149,32,.1);
+  --red-lt:       rgba(198,40,40,.08);
   --red:          #C62828;
-  --water:        #5BA4D9;
-  --water-lt:     rgba(91,164,217,.15);
-  --border:       rgba(255,255,255,.08);
-  --shadow-sm:    0 1px 3px rgba(0,0,0,.3);
-  --shadow:       0 3px 10px rgba(0,0,0,.4);
-  --shadow-lg:    0 12px 36px rgba(0,0,0,.5);
-  --radius:       18px;
-  --radius-sm:    12px;
-  --radius-xs:    8px;
+  --water:        #4A9CD8;
+  --water-lt:     rgba(74,156,216,.1);
+  --border:       rgba(0,0,0,.07);
+  --shadow-sm:    0 1px 4px rgba(0,0,0,.05);
+  --shadow:       0 4px 16px rgba(0,0,0,.07);
+  --shadow-lg:    0 12px 40px rgba(0,0,0,.1);
+  --radius:       22px;
+  --radius-sm:    16px;
+  --radius-xs:    10px;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-ui:      'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --max-w:        540px;
   --safe-top:     env(safe-area-inset-top, 0px);
   --safe-bot:     env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:           #111110;
+    --bg-card:      #1C1B18;
+    --bg-elevated:  #252420;
+    --bg-dark:      #0A0A09;
+    --bg-glass:     rgba(28,27,24,.72);
+    --bg-glass-nav: rgba(13,13,12,.88);
+    --text:         #F0EBE0;
+    --text-2:       #A09A90;
+    --text-3:       #6B6560;
+    --accent:       #D4622A;
+    --accent-lt:    rgba(212,98,42,.15);
+    --green:        #5DA870;
+    --green-lt:     rgba(93,168,112,.15);
+    --amber:        #D4A040;
+    --amber-lt:     rgba(212,160,64,.15);
+    --red-lt:       rgba(198,40,40,.15);
+    --water:        #5BA4D9;
+    --water-lt:     rgba(91,164,217,.15);
+    --border:       rgba(255,255,255,.08);
+    --shadow-sm:    0 1px 3px rgba(0,0,0,.3);
+    --shadow:       0 4px 16px rgba(0,0,0,.35);
+    --shadow-lg:    0 12px 40px rgba(0,0,0,.5);
+  }
 }
 
 /* ─── Reset ─────────────────────────────────────── */
@@ -75,7 +104,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(17,17,16,.85);
+  background: var(--bg-glass-nav);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding-top: var(--safe-top);
@@ -139,10 +168,10 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: var(--max-w);
-  background: rgba(13,13,12,.88);
+  background: var(--bg-glass-nav);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-top: 1px solid rgba(212,98,42,.12);
+  border-top: 1px solid var(--border);
   display: flex;
   padding-bottom: var(--safe-bot);
   z-index: 100;
@@ -386,13 +415,13 @@ body {
 .metric-card {
   flex: 1;
   min-width: 80px;
-  background: rgba(28,27,24,.7);
+  background: var(--bg-glass);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 10px;
   text-align: center;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .metric-value {
@@ -450,7 +479,7 @@ body {
 
 .summary-card {
   flex: 1;
-  background: rgba(28,27,24,.8);
+  background: var(--bg-glass);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -498,13 +527,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(28,27,24,.7);
+  background: var(--bg-glass);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 12px 12px 14px;
   margin-bottom: 8px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: slide-up .25s ease both;
 }
 
@@ -1384,7 +1413,7 @@ body.nuri-locked {
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(10,10,9,.75);
+  background: rgba(0,0,0,.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
