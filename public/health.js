@@ -129,6 +129,31 @@ const Health = {
     return null;
   },
 
+  /** Read the device owner's first name from Contacts */
+  async getOwnerName() {
+    try {
+      if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return null;
+
+      const contacts = window.Capacitor.Plugins.CapacitorContacts || null;
+      if (!contacts) return null;
+
+      // Request permission
+      const perm = await contacts.requestPermissions();
+      if (perm.contacts !== 'granted') return null;
+
+      // Get contacts, look for "me" card or first contact
+      const result = await contacts.getContacts({ projection: { name: true } });
+      if (result?.contacts?.length > 0) {
+        // Try to find the owner — usually the first contact or one marked as "me"
+        const me = result.contacts.find(c => c.name?.given) || result.contacts[0];
+        return me?.name?.given || null;
+      }
+    } catch (err) {
+      console.warn('Failed to read owner name:', err);
+    }
+    return null;
+  },
+
   /** Write a nutrition/calorie entry to Health (after saving a meal) */
   async writeNutrition({ calories, date }) {
     if (!(await this.isAvailable())) return false;

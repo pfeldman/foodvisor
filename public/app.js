@@ -1534,18 +1534,32 @@ const WIZARD_STEPS = [
           syncBtn.disabled = true;
 
           try {
-            const result = await syncHealthToProfile();
-            if (result) {
-              if (result.weight) wizardData.peso = result.weight;
-              if (result.height) wizardData.altura = result.height;
-              wizardData.healthSync = true;
-              statusEl.innerHTML = `Sincronizado! ${result.weight ? `Peso: ${result.weight}kg` : ''} ${result.height ? `Altura: ${result.height}cm` : ''}`;
-              setTimeout(() => renderWizardStep('cuerpo'), 1500);
-            } else {
-              wizardData.healthSync = true;
-              statusEl.textContent = 'Conectado. No se encontraron datos recientes.';
-              setTimeout(() => renderWizardStep('cuerpo'), 1500);
+            // Read health data and name in parallel
+            const [healthResult, ownerName] = await Promise.all([
+              syncHealthToProfile(),
+              (typeof Health !== 'undefined' && Health.getOwnerName) ? Health.getOwnerName() : null,
+            ]);
+
+            if (ownerName && !wizardData.nombre) {
+              wizardData.nombre = ownerName;
             }
+            if (healthResult) {
+              if (healthResult.weight) wizardData.peso = healthResult.weight;
+              if (healthResult.height) wizardData.altura = healthResult.height;
+            }
+            wizardData.healthSync = true;
+
+            const parts = [];
+            if (ownerName) parts.push(`Nombre: ${ownerName}`);
+            if (healthResult?.weight) parts.push(`Peso: ${healthResult.weight}kg`);
+            if (healthResult?.height) parts.push(`Altura: ${healthResult.height}cm`);
+
+            if (parts.length > 0) {
+              statusEl.innerHTML = `Sincronizado! ${parts.join(' | ')}`;
+            } else {
+              statusEl.textContent = 'Conectado. No se encontraron datos recientes.';
+            }
+            setTimeout(() => renderWizardStep('cuerpo'), 1500);
           } catch {
             statusEl.textContent = 'No se pudo conectar. Podes intentarlo despues en Configuracion.';
             syncBtn.disabled = false;
