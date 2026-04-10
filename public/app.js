@@ -1561,19 +1561,33 @@ const WIZARD_STEPS = [
               }
             }
 
-            // List all methods on the plugin to find the right API
-            const methods = [];
-            for (const key in hp) {
-              if (typeof hp[key] === 'function') methods.push(key);
-            }
-            // Also check prototype
-            const proto = Object.getPrototypeOf(hp) || {};
-            for (const key of Object.getOwnPropertyNames(proto)) {
-              if (typeof proto[key] === 'function' && key !== 'constructor') methods.push(key);
-            }
-            alert('DEBUG 4 - plugin methods: ' + methods.join(', '));
-
             let weightVal = null, heightVal = null;
+            if (authOk) {
+              try {
+                const now = new Date().toISOString();
+                const ago = new Date(Date.now() - 90 * 86400000).toISOString();
+                const wRes = await hp.readSamples({ type: 'weight', startDate: ago, endDate: now, limit: 1 });
+                if (wRes?.samples?.length > 0) weightVal = Math.round(wRes.samples[0].value * 10) / 10;
+                else if (wRes?.data?.length > 0) weightVal = Math.round(wRes.data[0].value * 10) / 10;
+              } catch (e) {
+                alert('DEBUG weight error: ' + e.message);
+              }
+
+              try {
+                const now = new Date().toISOString();
+                const ago = new Date(Date.now() - 365 * 86400000).toISOString();
+                const hRes = await hp.readSamples({ type: 'height', startDate: ago, endDate: now, limit: 1 });
+                if (hRes?.samples?.length > 0) {
+                  const v = hRes.samples[0].value;
+                  heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+                } else if (hRes?.data?.length > 0) {
+                  const v = hRes.data[0].value;
+                  heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+                }
+              } catch (e) {
+                alert('DEBUG height error: ' + e.message);
+              }
+            }
 
             let healthResult = null;
             if (weightVal || heightVal) {

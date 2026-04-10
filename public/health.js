@@ -1,8 +1,8 @@
 /* ===================================================
    FOODVISOR — Health Integration
    Uses @capgo/capacitor-health (Capacitor 8+)
-   Unified API for Apple HealthKit & Google Health Connect
-   Degrades gracefully when running in browser
+   API: isAvailable, requestAuthorization, readSamples,
+        queryAggregated, saveSample
    =================================================== */
 
 const Health = {
@@ -50,7 +50,7 @@ const Health = {
         read: ['weight', 'height', 'steps', 'calories.active', 'heartRate'],
         write: ['weight', 'calories', 'steps'],
       });
-      return result.authorized === true;
+      return true;
     } catch (err) {
       console.warn('Health authorization failed:', err);
       return false;
@@ -63,17 +63,18 @@ const Health = {
 
     try {
       const now = new Date().toISOString();
-      const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const ago = new Date(Date.now() - 90 * 86400000).toISOString();
 
-      const result = await this._plugin.query({
+      const result = await this._plugin.readSamples({
         type: 'weight',
-        startDate: monthAgo,
+        startDate: ago,
         endDate: now,
         limit: 1,
       });
 
-      if (result?.data?.length > 0) {
-        return Math.round(result.data[0].value * 10) / 10;
+      const samples = result?.samples || result?.data || [];
+      if (samples.length > 0) {
+        return Math.round(samples[0].value * 10) / 10;
       }
     } catch (err) {
       console.warn('Failed to read weight:', err);
@@ -87,18 +88,18 @@ const Health = {
 
     try {
       const now = new Date().toISOString();
-      const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString();
+      const ago = new Date(Date.now() - 365 * 86400000).toISOString();
 
-      const result = await this._plugin.query({
+      const result = await this._plugin.readSamples({
         type: 'height',
-        startDate: yearAgo,
+        startDate: ago,
         endDate: now,
         limit: 1,
       });
 
-      if (result?.data?.length > 0) {
-        // Plugin returns height in meters, convert to cm
-        const val = result.data[0].value;
+      const samples = result?.samples || result?.data || [];
+      if (samples.length > 0) {
+        const val = samples[0].value;
         return val > 3 ? Math.round(val) : Math.round(val * 100);
       }
     } catch (err) {
@@ -130,39 +131,13 @@ const Health = {
     return null;
   },
 
-  /** Read the device owner's first name from Contacts */
-  async getOwnerName() {
-    try {
-      if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return null;
-
-      const contacts = window.Capacitor.Plugins.Contacts
-        || window.Capacitor.Plugins.CapacitorContacts || null;
-      if (!contacts) return null;
-
-      // Request permission
-      const perm = await contacts.requestPermissions();
-      if (perm.contacts !== 'granted') return null;
-
-      // Get contacts, look for "me" card or first contact
-      const result = await contacts.getContacts({ projection: { name: true } });
-      if (result?.contacts?.length > 0) {
-        // Try to find the owner — usually the first contact or one marked as "me"
-        const me = result.contacts.find(c => c.name?.given) || result.contacts[0];
-        return me?.name?.given || null;
-      }
-    } catch (err) {
-      console.warn('Failed to read owner name:', err);
-    }
-    return null;
-  },
-
   /** Write a nutrition/calorie entry to Health (after saving a meal) */
   async writeNutrition({ calories, date }) {
     if (!(await this.isAvailable())) return false;
     if (!calories || calories <= 0) return false;
 
     try {
-      await this._plugin.store({
+      await this._plugin.saveSample({
         type: 'calories',
         value: calories,
         startDate: date || new Date().toISOString(),
@@ -173,5 +148,28 @@ const Health = {
       console.warn('Failed to write nutrition:', err);
     }
     return false;
+  },
+
+  /** Read the device owner's first name from Contacts */
+  async getOwnerName() {
+    try {
+      if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return null;
+
+      const contacts = window.Capacitor.Plugins.Contacts
+        || window.Capacitor.Plugins.CapacitorContacts || null;
+      if (!contacts) return null;
+
+      const perm = await contacts.requestPermissions();
+      if (perm.contacts !== 'granted') return null;
+
+      const result = await contacts.getContacts({ projection: { name: true } });
+      if (result?.contacts?.length > 0) {
+        const me = result.contacts.find(c => c.name?.given) || result.contacts[0];
+        return me?.name?.given || null;
+      }
+    } catch (err) {
+      console.warn('Failed to read owner name:', err);
+    }
+    return null;
   },
 };
