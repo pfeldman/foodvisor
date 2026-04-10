@@ -612,9 +612,13 @@ function renderNuri(container) {
     }
   });
 
-  // Nuri is fullscreen fixed — hide bottom nav, lock body scroll
+  // Nuri is fullscreen fixed — hide bottom nav, lock ALL scroll
   $('bottom-nav').style.display = 'none';
+  document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
+  document.body.style.height = '100%';
 
   const chatEl = $('nuri-chat');
   const nuriView = container.querySelector('.nuri-view');
@@ -634,7 +638,11 @@ function renderNuri(container) {
     state._nuriCleanup = () => {
       window.visualViewport.removeEventListener('resize', adjustHeight);
       $('bottom-nav').style.display = '';
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     };
   }
 }

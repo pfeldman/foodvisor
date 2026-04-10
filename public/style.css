@@ -795,6 +795,8 @@ body {
   max-width: var(--max-w);
   margin: 0 auto;
   padding-top: var(--safe-top);
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 .nuri-header {
@@ -839,6 +841,8 @@ body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 16px;
   display: flex;
   flex-direction: column;
