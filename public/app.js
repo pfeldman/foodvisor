@@ -820,7 +820,20 @@ async function sendNuriMessage(text) {
       fibra: e.totales?.fibra || 0,
     }));
 
+    // Add water data for each day
+    const waterData = Water.load();
+    const waterContext = {};
+    const d = new Date(weekAgo);
+    while (d <= new Date()) {
+      const iso = fmt.iso(d);
+      waterContext[iso] = waterData[iso] || 0;
+      d.setDate(d.getDate() + 1);
+    }
+
     const profile = Profile.load();
+    // Attach water to profile context
+    if (profile) profile.agua_hoy = Water.getToday();
+    if (profile) profile.agua_objetivo = Water.TARGET;
 
     // Check if it's a recipe request — use /api/recommend
     const isRecipeRequest = /receta|cocinar|preparar|comer hoy|que hago de|que cocino/i.test(text);
@@ -829,7 +842,7 @@ async function sendNuriMessage(text) {
       const res = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile, history, context: text }),
+        body: JSON.stringify({ profile, history, context: text, water: waterContext }),
       });
 
       if (!res.ok) throw new Error('Error del servidor');
@@ -845,7 +858,7 @@ async function sendNuriMessage(text) {
       const res = await fetch('/api/coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, profile, history }),
+        body: JSON.stringify({ message: text, profile, history, water: waterContext }),
       });
 
       if (!res.ok) throw new Error('Error del servidor');
@@ -2280,8 +2293,23 @@ function vibrate(pattern) {
 async function initHealth() {
   if (typeof Health === 'undefined') return;
   const available = await Health.isAvailable();
-  if (available) {
-    console.log('Health APIs available on', Health.getPlatform());
+  if (!available) return;
+
+  console.log('Health APIs available on', Health.getPlatform());
+
+  // Auto-sync weight on app open (if health was previously authorized)
+  const profile = Profile.load();
+  if (profile?.healthSync) {
+    try {
+      const weight = await Health.getWeight();
+      if (weight && weight !== profile.peso) {
+        profile.peso = weight;
+        Profile.save(profile);
+        console.log('Weight updated from Health:', weight);
+      }
+    } catch (e) {
+      console.warn('Weight auto-sync failed:', e);
+    }
   }
 }
 

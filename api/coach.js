@@ -27,6 +27,12 @@ IMPORTANTE — Interpretación de objetivos del perfil:
 
 Nunca digas "subir de peso" si el objetivo es "masa_muscular" — decí "ganar masa muscular" o "ganar músculo".
 
+HIDRATACION:
+- Tenés acceso al consumo de agua del usuario (vasos por día, objetivo 8 vasos).
+- "agua_hoy" en el perfil indica cuántos vasos tomó hoy.
+- Si ves que el usuario toma poca agua, mencionalo con buena onda ("ché, ¿cómo venís con el agua hoy?").
+- No seas pesado con el agua en cada mensaje, pero si te preguntan "cómo me fue" o piden un resumen, incluilo.
+
 REGISTRO DE COMIDAS POR CHAT:
 Si el usuario te cuenta algo que comió y quiere registrarlo (ej: "comí carne con ensalada", "almorcé una milanesa", "me olvidé de cargar el desayuno, comí tostadas con queso"), hacé lo siguiente:
 1. Preguntale detalles si son necesarios (ej: "la carne era un bife? cuánto más o menos? y la ensalada qué tenía?")
@@ -60,6 +66,7 @@ export default async function handler(req, res) {
     const contextParts = [];
     if (profile) contextParts.push(`PERFIL DEL USUARIO: ${JSON.stringify(profile)}`);
     if (history && history.length > 0) contextParts.push(`HISTORIAL ALIMENTARIO RECIENTE: ${JSON.stringify(history.slice(-50))}`);
+    if (req.body.water) contextParts.push(`AGUA (vasos por dia, objetivo 8): ${JSON.stringify(req.body.water)}`);
     if (contextParts.length > 0) {
       messages.push({ role: 'system', content: contextParts.join('\n\n') });
     }
