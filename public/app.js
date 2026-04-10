@@ -175,10 +175,11 @@ function setupNav() {
 
 // ─── Routing ──────────────────────────────────────
 function renderView(view) {
-  // Clean up Nuri fullscreen when leaving
-  if (state._nuriCleanup && view !== 'nuri') {
-    state._nuriCleanup();
-    state._nuriCleanup = null;
+  // Clean up Nuri overlay when leaving
+  if (view !== 'nuri') {
+    const overlay = document.getElementById('nuri-overlay');
+    if (overlay) overlay.remove();
+    if (state._nuriCleanup) { state._nuriCleanup(); state._nuriCleanup = null; }
   }
   state.view = view;
   const main = $('main');
@@ -538,7 +539,16 @@ function renderNuri(container) {
   const profile = Profile.load();
   const name = profile?.nombre || 'amigo/a';
 
-  container.innerHTML = `
+  container.innerHTML = '';
+
+  // Mount nuri-view directly on body to avoid stacking context issues
+  let nuriEl = document.getElementById('nuri-overlay');
+  if (!nuriEl) {
+    nuriEl = document.createElement('div');
+    nuriEl.id = 'nuri-overlay';
+    document.body.appendChild(nuriEl);
+  }
+  nuriEl.innerHTML = `
     <div class="nuri-view">
       <div class="nuri-header">
           <button class="nuri-back" id="nuri-back">
@@ -601,7 +611,7 @@ function renderNuri(container) {
   bindNuriFoodSaveButtons();
 
   // Suggestion buttons
-  container.querySelectorAll('.nuri-suggestion').forEach(btn => {
+  nuriEl.querySelectorAll('.nuri-suggestion').forEach(btn => {
     btn.addEventListener('click', () => sendNuriMessage(btn.dataset.msg));
   });
 
