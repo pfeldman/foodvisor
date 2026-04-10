@@ -624,8 +624,10 @@ function renderNuri(container) {
 
   // visualViewport adjusts the inner container when keyboard opens
   if (window.visualViewport) {
+    const nuriView = $('nuri-view');
     const adjustHeight = () => {
-      nuriInner.style.height = window.visualViewport.height + 'px';
+      // Set the whole view to visualViewport height, inner is 100% of that minus padding
+      nuriView.style.height = window.visualViewport.height + 'px';
       setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
     };
     window.visualViewport.addEventListener('resize', adjustHeight);

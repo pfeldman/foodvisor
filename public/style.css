@@ -799,7 +799,7 @@ body {
 .nuri-inner {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - var(--safe-top));
 }
 
 .nuri-header {
