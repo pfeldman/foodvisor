@@ -627,20 +627,29 @@ function renderNuri(container) {
   const vv = window.visualViewport;
   if (vv) {
     const setVVH = () => {
+      // Force page back to top — iOS scrolls the webview when keyboard opens
+      window.scrollTo(0, 0);
       // Account for viewport offset (iOS may scroll the webview when keyboard opens)
       const vvh = `${vv.offsetTop + vv.height}px`;
       // When keyboard is open (viewport < 600px), don't add safe area padding
       const vvs = vv.height < 600 ? '0px' : 'env(safe-area-inset-bottom)';
       document.body.style.setProperty('--nuri-vvh', vvh);
       document.body.style.setProperty('--nuri-vvs', vvs);
-      setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        chatEl.scrollTop = chatEl.scrollHeight;
+      });
     };
     vv.addEventListener('resize', setVVH);
     vv.addEventListener('scroll', setVVH);
+    // Also catch any page scroll and force it back
+    const preventScroll = () => { window.scrollTo(0, 0); };
+    window.addEventListener('scroll', preventScroll);
     setVVH(); // set initial values
     state._nuriCleanup = () => {
       vv.removeEventListener('resize', setVVH);
       vv.removeEventListener('scroll', setVVH);
+      window.removeEventListener('scroll', preventScroll);
       document.body.style.removeProperty('--nuri-vvh');
       document.body.style.removeProperty('--nuri-vvs');
       $('bottom-nav').style.display = '';
