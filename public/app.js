@@ -1557,7 +1557,22 @@ const WIZARD_STEPS = [
               }
             }
 
-            let healthResult = weightVal ? { weight: weightVal } : null;
+            // Read height (separate — wider date range, no limit)
+            let heightVal = null;
+            try {
+              const ago10y = new Date(Date.now() - 3650 * 86400000).toISOString();
+              const hRes = await hp.readSamples({ dataType: 'height', startDate: ago10y, endDate: now });
+              alert('DEBUG height: ' + JSON.stringify(hRes).slice(0, 400));
+              const hSamples = hRes?.samples || hRes?.data || [];
+              if (hSamples.length > 0) {
+                const v = hSamples[0].value;
+                heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+              }
+            } catch (e) {
+              alert('DEBUG height error: ' + e.message);
+            }
+
+            let healthResult = (weightVal || heightVal) ? { weight: weightVal, height: heightVal } : null;
 
             // Try to read name from Contacts
             let ownerName = null;
