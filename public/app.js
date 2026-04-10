@@ -312,12 +312,12 @@ function renderToday(container) {
       <div class="water-section">
         <div class="water-header">
           <span class="section-label" style="margin:0">Agua</span>
-          <span class="water-count">${water} / ${Water.TARGET}</span>
+          <span class="water-count" style="color:var(--water)">${water} / ${Water.TARGET}</span>
         </div>
         <div class="water-drops">
           ${Array.from({ length: Water.TARGET }, (_, i) => `
             <button class="water-drop ${i < water ? 'filled' : ''}" data-water-idx="${i}">
-              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z" fill="${i < water ? 'var(--accent)' : 'none'}" stroke="${i < water ? 'var(--accent)' : 'var(--border)'}" stroke-width="1.5"/></svg>
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z" fill="${i < water ? 'var(--water)' : 'none'}" stroke="${i < water ? 'var(--water)' : 'var(--text-3)'}" stroke-width="1.5"/></svg>
             </button>
           `).join('')}
         </div>
