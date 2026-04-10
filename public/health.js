@@ -129,30 +129,37 @@ const Health = {
       if (!contacts) return null;
 
       const perm = await contacts.requestPermissions();
-      if (perm.contacts !== 'granted') return null;
+      // iOS returns 'granted', Android may return 'granted' or similar
+      if (perm?.contacts !== 'granted' && perm?.readContacts !== 'granted') return null;
 
       const result = await contacts.getContacts({
-        projection: { name: true, birthday: true },
+        projection: {
+          givenName: true,
+          familyName: true,
+          birthday: true,
+        },
       });
 
-      if (result?.contacts?.length > 0) {
-        const me = result.contacts.find(c => c.name?.given) || result.contacts[0];
-        const info = { name: me?.name?.given || me?.givenName || null };
+      const list = result?.contacts || [];
+      if (list.length === 0) return null;
 
-        // Calculate age from birthday
-        const bday = me?.birthday;
-        if (bday?.year && bday?.month && bday?.day) {
-          const today = new Date();
-          let age = today.getFullYear() - bday.year;
-          const monthDiff = today.getMonth() + 1 - bday.month;
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < bday.day)) {
-            age--;
-          }
-          if (age > 0 && age < 120) info.age = age;
+      // Find first contact with a name (usually the owner / "me" card)
+      const me = list.find(c => c.givenName) || list[0];
+      const info = { name: me?.givenName || me?.fullName || null };
+
+      // Calculate age from birthday
+      const bday = me?.birthday;
+      if (bday?.year && bday?.month && bday?.day) {
+        const today = new Date();
+        let age = today.getFullYear() - bday.year;
+        const monthDiff = today.getMonth() + 1 - bday.month;
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < bday.day)) {
+          age--;
         }
-
-        return info;
+        if (age > 0 && age < 120) info.age = age;
       }
+
+      return info;
     } catch (err) {
       console.warn('Failed to read owner info:', err);
     }

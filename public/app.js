@@ -1574,13 +1574,18 @@ const WIZARD_STEPS = [
             let ownerName = null;
             let ownerAge = null;
             try {
+              const cp = window.Capacitor?.Plugins?.Contacts
+                || window.Capacitor?.Plugins?.CapacitorContacts || null;
+              alert('DEBUG contacts plugin: ' + (cp ? 'found' : 'NOT found. Plugins: ' + Object.keys(window.Capacitor?.Plugins || {}).join(', ')));
+
               if (typeof Health !== 'undefined' && Health.getOwnerInfo) {
                 const info = await Health.getOwnerInfo();
+                alert('DEBUG contacts info: ' + JSON.stringify(info));
                 if (info?.name) ownerName = info.name;
                 if (info?.age) ownerAge = info.age;
               }
             } catch (e) {
-              console.warn('Contacts error:', e);
+              alert('DEBUG contacts error: ' + e.message);
             }
 
             if (ownerName && !wizardData.nombre) wizardData.nombre = ownerName;
