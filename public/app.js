@@ -539,50 +539,52 @@ function renderNuri(container) {
   const name = profile?.nombre || 'amigo/a';
 
   container.innerHTML = `
-    <div class="nuri-view">
-      <div class="nuri-header">
-        <div class="nuri-avatar">N</div>
-        <div class="nuri-intro">
-          <div class="nuri-name">Nuri</div>
-          <div class="nuri-role">Tu coach nutricional</div>
+    <div class="nuri-view" id="nuri-view">
+      <div class="nuri-inner">
+        <div class="nuri-header">
+          <div class="nuri-avatar">N</div>
+          <div class="nuri-intro">
+            <div class="nuri-name">Nuri</div>
+            <div class="nuri-role">Tu coach nutricional</div>
+          </div>
         </div>
-      </div>
 
-      <div class="nuri-chat" id="nuri-chat">
-        ${state.nuriMessages.length === 0 ? `
-          <div class="nuri-welcome">
-            <p class="nuri-welcome-text">Hola ${escHtml(name)}! Soy Nuri, tu coach nutricional. Preguntame lo que quieras:</p>
-            <div class="nuri-suggestions">
-              <button class="nuri-suggestion" data-msg="Como me fue hoy?">Como me fue hoy?</button>
-              <button class="nuri-suggestion" data-msg="Que me falta esta semana?">Que me falta esta semana?</button>
-              <button class="nuri-suggestion" data-msg="Dame una receta saludable para hoy">Receta para hoy</button>
-              <button class="nuri-suggestion" data-msg="Que deberia mejorar de mi alimentacion?">Que deberia mejorar?</button>
+        <div class="nuri-chat" id="nuri-chat">
+          ${state.nuriMessages.length === 0 ? `
+            <div class="nuri-welcome">
+              <p class="nuri-welcome-text">Hola ${escHtml(name)}! Soy Nuri, tu coach nutricional. Preguntame lo que quieras:</p>
+              <div class="nuri-suggestions">
+                <button class="nuri-suggestion" data-msg="Como me fue hoy?">Como me fue hoy?</button>
+                <button class="nuri-suggestion" data-msg="Que me falta esta semana?">Que me falta esta semana?</button>
+                <button class="nuri-suggestion" data-msg="Dame una receta saludable para hoy">Receta para hoy</button>
+                <button class="nuri-suggestion" data-msg="Que deberia mejorar de mi alimentacion?">Que deberia mejorar?</button>
+              </div>
             </div>
-          </div>
-        ` : state.nuriMessages.map(m => `
-          <div class="nuri-msg ${m.role}">
-            ${m.role === 'assistant' ? '<div class="nuri-msg-avatar">N</div>' : ''}
-            <div class="nuri-msg-bubble">${formatNuriMessage(m.content)}</div>
-          </div>
-        `).join('')}
-        ${state.nuriLoading ? `
-          <div class="nuri-msg assistant">
-            <div class="nuri-msg-avatar">N</div>
-            <div class="nuri-msg-bubble nuri-typing">
-              <span></span><span></span><span></span>
+          ` : state.nuriMessages.map(m => `
+            <div class="nuri-msg ${m.role}">
+              ${m.role === 'assistant' ? '<div class="nuri-msg-avatar">N</div>' : ''}
+              <div class="nuri-msg-bubble">${formatNuriMessage(m.content)}</div>
             </div>
-          </div>
-        ` : ''}
-      </div>
+          `).join('')}
+          ${state.nuriLoading ? `
+            <div class="nuri-msg assistant">
+              <div class="nuri-msg-avatar">N</div>
+              <div class="nuri-msg-bubble nuri-typing">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
 
-      <div class="nuri-input-wrap">
-        <input type="text" id="nuri-input" class="nuri-input" placeholder="Preguntale a Nuri..." autocomplete="off">
-        <button class="nuri-send" id="nuri-send">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
+        <div class="nuri-input-wrap">
+          <input type="text" id="nuri-input" class="nuri-input" placeholder="Preguntale a Nuri..." autocomplete="off">
+          <button class="nuri-send" id="nuri-send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -612,24 +614,18 @@ function renderNuri(container) {
     }
   });
 
-  // Nuri is fullscreen fixed — hide bottom nav, lock ALL scroll
   $('bottom-nav').style.display = 'none';
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
-  document.body.style.width = '100%';
-  document.body.style.height = '100%';
 
   const chatEl = $('nuri-chat');
-  const nuriView = container.querySelector('.nuri-view');
+  const nuriInner = container.querySelector('.nuri-inner');
 
   // Scroll chat to bottom
   setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
 
-  // Use visualViewport to adapt when keyboard opens/closes
+  // visualViewport adjusts the inner container when keyboard opens
   if (window.visualViewport) {
     const adjustHeight = () => {
-      nuriView.style.height = window.visualViewport.height + 'px';
+      nuriInner.style.height = window.visualViewport.height + 'px';
       setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
     };
     window.visualViewport.addEventListener('resize', adjustHeight);
@@ -638,11 +634,6 @@ function renderNuri(container) {
     state._nuriCleanup = () => {
       window.visualViewport.removeEventListener('resize', adjustHeight);
       $('bottom-nav').style.display = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
     };
   }
 }

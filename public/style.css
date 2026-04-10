@@ -790,12 +790,16 @@ body {
   bottom: 0;
   z-index: 150;
   background: var(--bg);
-  display: flex;
-  flex-direction: column;
   max-width: var(--max-w);
   margin: 0 auto;
   padding-top: var(--safe-top);
   overscroll-behavior: none;
+}
+
+.nuri-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .nuri-header {
@@ -804,6 +808,7 @@ body {
   gap: 12px;
   padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .nuri-avatar {
@@ -956,7 +961,6 @@ body {
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  padding-bottom: calc(12px + var(--safe-bot));
   border-top: 1px solid var(--border);
   background: var(--bg);
   flex-shrink: 0;
