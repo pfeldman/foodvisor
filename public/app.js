@@ -1563,25 +1563,25 @@ const WIZARD_STEPS = [
 
             let weightVal = null, heightVal = null;
             if (authOk) {
+              const now = new Date().toISOString();
+              const ago90 = new Date(Date.now() - 90 * 86400000).toISOString();
+
               try {
-                const now = new Date().toISOString();
-                const ago = new Date(Date.now() - 90 * 86400000).toISOString();
-                const wRes = await hp.readSamples({ type: 'weight', startDate: ago, endDate: now, limit: 1 });
-                if (wRes?.samples?.length > 0) weightVal = Math.round(wRes.samples[0].value * 10) / 10;
-                else if (wRes?.data?.length > 0) weightVal = Math.round(wRes.data[0].value * 10) / 10;
+                const wRes = await hp.readSamples({ dataType: 'weight', startDate: ago90, endDate: now, limit: 1 });
+                alert('DEBUG weight raw: ' + JSON.stringify(wRes).slice(0, 300));
+                const samples = wRes?.samples || wRes?.data || wRes?.results || [];
+                if (samples.length > 0) weightVal = Math.round(samples[0].value * 10) / 10;
               } catch (e) {
                 alert('DEBUG weight error: ' + e.message);
               }
 
               try {
-                const now = new Date().toISOString();
-                const ago = new Date(Date.now() - 365 * 86400000).toISOString();
-                const hRes = await hp.readSamples({ type: 'height', startDate: ago, endDate: now, limit: 1 });
-                if (hRes?.samples?.length > 0) {
-                  const v = hRes.samples[0].value;
-                  heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
-                } else if (hRes?.data?.length > 0) {
-                  const v = hRes.data[0].value;
+                const ago365 = new Date(Date.now() - 365 * 86400000).toISOString();
+                const hRes = await hp.readSamples({ dataType: 'height', startDate: ago365, endDate: now, limit: 1 });
+                alert('DEBUG height raw: ' + JSON.stringify(hRes).slice(0, 300));
+                const samples = hRes?.samples || hRes?.data || hRes?.results || [];
+                if (samples.length > 0) {
+                  const v = samples[0].value;
                   heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
                 }
               } catch (e) {
