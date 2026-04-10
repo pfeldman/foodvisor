@@ -1561,7 +1561,8 @@ const WIZARD_STEPS = [
             let heightVal = null;
             try {
               const ago10y = new Date(Date.now() - 3650 * 86400000).toISOString();
-              const hRes = await hp.readSamples({ dataType: 'height', startDate: ago10y, endDate: now });
+              const nowIso = new Date().toISOString();
+              const hRes = await hp.readSamples({ dataType: 'height', startDate: ago10y, endDate: nowIso });
               alert('DEBUG height: ' + JSON.stringify(hRes).slice(0, 400));
               const hSamples = hRes?.samples || hRes?.data || [];
               if (hSamples.length > 0) {
