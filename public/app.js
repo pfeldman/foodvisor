@@ -1576,13 +1576,30 @@ const WIZARD_STEPS = [
             try {
               const cp = window.Capacitor?.Plugins?.Contacts
                 || window.Capacitor?.Plugins?.CapacitorContacts || null;
-              alert('DEBUG contacts plugin: ' + (cp ? 'found' : 'NOT found. Plugins: ' + Object.keys(window.Capacitor?.Plugins || {}).join(', ')));
 
-              if (typeof Health !== 'undefined' && Health.getOwnerInfo) {
-                const info = await Health.getOwnerInfo();
-                alert('DEBUG contacts info: ' + JSON.stringify(info));
-                if (info?.name) ownerName = info.name;
-                if (info?.age) ownerAge = info.age;
+              if (cp) {
+                const perm = await cp.requestPermissions();
+                alert('DEBUG perm: ' + JSON.stringify(perm));
+
+                const result = await cp.getContacts({
+                  projection: { givenName: true, familyName: true, birthday: true },
+                });
+                const list = result?.contacts || [];
+                alert('DEBUG contacts count: ' + list.length + ', first: ' + JSON.stringify(list[0] || 'none').slice(0, 300));
+
+                if (list.length > 0) {
+                  const me = list.find(c => c.givenName) || list[0];
+                  ownerName = me?.givenName || null;
+                  const bday = me?.birthday;
+                  if (bday?.year) {
+                    const today = new Date();
+                    let age = today.getFullYear() - bday.year;
+                    if (today.getMonth() + 1 < bday.month || (today.getMonth() + 1 === bday.month && today.getDate() < bday.day)) age--;
+                    if (age > 0 && age < 120) ownerAge = age;
+                  }
+                }
+              } else {
+                alert('DEBUG contacts plugin NOT found. Plugins: ' + Object.keys(window.Capacitor?.Plugins || {}).join(', '));
               }
             } catch (e) {
               alert('DEBUG contacts error: ' + e.message);
