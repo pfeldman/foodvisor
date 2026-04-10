@@ -1295,6 +1295,44 @@ body {
 .q-fill-3 { background: linear-gradient(90deg, var(--amber), var(--green)); }
 .q-fill-4 { background: linear-gradient(90deg, var(--green), #2E9959); }
 
+/* Overall quality bar */
+.quality-overall-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quality-bar-track-lg {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  position: relative;
+  overflow: hidden;
+}
+
+.quality-bar-track-lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--red) 0%, var(--amber) 40%, var(--green) 70%, #2E9959 100%);
+  opacity: 0.15;
+  border-radius: 6px;
+}
+
+.quality-bar-fill-gradient {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--amber) 40%, var(--green) 70%, #2E9959 100%);
+  transition: width .5s ease;
+  position: relative;
+}
+
+.quality-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+
 .quality-bar-detail {
   font-size: 11px;
   color: var(--text-3);

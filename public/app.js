@@ -997,7 +997,30 @@ function renderQualityRow(calidad) {
 
   const levelLabels = { 1: 'Pobre', 2: 'Regular', 3: 'Bueno', 4: 'Excelente' };
 
-  row.innerHTML = axes.map(ax => {
+  // Calculate overall average
+  const niveles = axes.map(ax => calidad[ax.key]?.nivel || 0).filter(n => n > 0);
+  const avgRaw = niveles.length > 0 ? niveles.reduce((a, b) => a + b, 0) / niveles.length : 0;
+  const avgNivel = Math.round(avgRaw);
+  const avgPct = Math.round((avgRaw / 4) * 100);
+
+  let html = '';
+
+  if (avgNivel > 0) {
+    html += `
+      <div class="quality-bar-item quality-overall">
+        <div class="quality-bar-header">
+          <span class="quality-bar-label quality-overall-label">Calidad nutricional</span>
+          <span class="quality-bar-level q-text-${avgNivel}">${levelLabels[avgNivel]}</span>
+        </div>
+        <div class="quality-bar-track quality-bar-track-lg">
+          <div class="quality-bar-fill-gradient" style="width:${avgPct}%"></div>
+        </div>
+      </div>
+      <div class="quality-divider"></div>
+    `;
+  }
+
+  html += axes.map(ax => {
     const data = calidad[ax.key];
     if (!data) return '';
     const nivel = data.nivel || 2;
@@ -1015,6 +1038,8 @@ function renderQualityRow(calidad) {
       </div>
     `;
   }).join('');
+
+  row.innerHTML = html;
 }
 
 function renderMacroBar(totales) {
