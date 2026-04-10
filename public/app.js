@@ -1542,7 +1542,7 @@ const WIZARD_STEPS = [
                 const availResult = await hp.isAvailable();
                 if (availResult?.available) {
                   await hp.requestAuthorization({
-                    read: ['weight', 'steps'],
+                    read: ['weight', 'height', 'steps'],
                     write: ['calories'],
                   });
 
@@ -1557,20 +1557,46 @@ const WIZARD_STEPS = [
               }
             }
 
-            // Read height (separate — wider date range, no limit)
+            // Read height — try multiple approaches
             let heightVal = null;
+            const nowIso = new Date().toISOString();
+            const ago10y = new Date(Date.now() - 3650 * 86400000).toISOString();
+
+            // Check actual authorization status for height
             try {
-              const ago10y = new Date(Date.now() - 3650 * 86400000).toISOString();
-              const nowIso = new Date().toISOString();
+              const authCheck = await hp.checkAuthorization({ dataType: 'height' });
+              alert('DEBUG height auth check: ' + JSON.stringify(authCheck));
+            } catch (e) {
+              alert('DEBUG height auth check error: ' + e.message);
+            }
+
+            // Try readSamples
+            try {
               const hRes = await hp.readSamples({ dataType: 'height', startDate: ago10y, endDate: nowIso });
-              alert('DEBUG height: ' + JSON.stringify(hRes).slice(0, 400));
-              const hSamples = hRes?.samples || hRes?.data || [];
+              alert('DEBUG height readSamples: ' + JSON.stringify(hRes).slice(0, 400));
+              const hSamples = hRes?.samples || [];
               if (hSamples.length > 0) {
                 const v = hSamples[0].value;
                 heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
               }
             } catch (e) {
-              alert('DEBUG height error: ' + e.message);
+              alert('DEBUG height readSamples error: ' + e.message);
+            }
+
+            // If readSamples empty, try queryAggregated
+            if (!heightVal) {
+              try {
+                const hAgg = await hp.queryAggregated({ dataType: 'height', startDate: ago10y, endDate: nowIso, aggregation: 'average' });
+                alert('DEBUG height aggregated: ' + JSON.stringify(hAgg).slice(0, 400));
+                if (hAgg?.value) {
+                  heightVal = hAgg.value > 3 ? Math.round(hAgg.value) : Math.round(hAgg.value * 100);
+                } else if (hAgg?.samples?.length > 0) {
+                  const v = hAgg.samples[0].value;
+                  heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+                }
+              } catch (e) {
+                alert('DEBUG height aggregated error: ' + e.message);
+              }
             }
 
             let healthResult = (weightVal || heightVal) ? { weight: weightVal, height: heightVal } : null;
