@@ -175,6 +175,11 @@ function setupNav() {
 
 // ─── Routing ──────────────────────────────────────
 function renderView(view) {
+  // Clean up Nuri keyboard listener if leaving
+  if (state._nuriCleanup && view !== 'nuri') {
+    state._nuriCleanup();
+    state._nuriCleanup = null;
+  }
   state.view = view;
   const main = $('main');
   if (view === 'today')        renderToday(main);
@@ -281,6 +286,7 @@ function getTargets() {
       protTarget = Math.round(peso * 2);
       break;
     case 'subir':
+    case 'masa_muscular':
       calTarget = Math.round(tdee * 1.15);
       protTarget = Math.round(peso * 2.2);
       break;
@@ -606,8 +612,31 @@ function renderNuri(container) {
     }
   });
 
-  // Focus input
-  setTimeout(() => input?.focus(), 300);
+  // Handle keyboard resize on iOS
+  const nuriView = container.querySelector('.nuri-view');
+  const chatEl = $('nuri-chat');
+  if (window.visualViewport) {
+    const onResize = () => {
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      nuriView.style.height = `calc(${window.visualViewport.height}px - 54px - var(--safe-top))`;
+      if (keyboardHeight > 100) {
+        // Keyboard open — hide bottom nav, scroll chat to bottom
+        $('bottom-nav').style.display = 'none';
+        setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
+      } else {
+        $('bottom-nav').style.display = '';
+      }
+    };
+    window.visualViewport.addEventListener('resize', onResize);
+    // Clean up on next render
+    state._nuriCleanup = () => {
+      window.visualViewport.removeEventListener('resize', onResize);
+      $('bottom-nav').style.display = '';
+    };
+  }
+
+  // Scroll chat to bottom
+  setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
 }
 
 async function sendNuriMessage(text) {
@@ -1580,7 +1609,7 @@ const WIZARD_STEPS = [
         <div class="wizard-options vertical">
           <button class="wizard-option ${data.objetivo === 'bajar' ? 'active' : ''}" data-val="bajar">Bajar de peso</button>
           <button class="wizard-option ${data.objetivo === 'mantener' ? 'active' : ''}" data-val="mantener">Mantener peso</button>
-          <button class="wizard-option ${data.objetivo === 'subir' ? 'active' : ''}" data-val="subir">Ganar masa muscular</button>
+          <button class="wizard-option ${data.objetivo === 'masa_muscular' ? 'active' : ''}" data-val="masa_muscular">Ganar masa muscular</button>
           <button class="wizard-option ${data.objetivo === 'salud' ? 'active' : ''}" data-val="salud">Comer mas saludable</button>
           <button class="wizard-option ${data.objetivo === 'energia' ? 'active' : ''}" data-val="energia">Tener mas energia</button>
         </div>

@@ -786,6 +786,8 @@ body {
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 54px - 72px - var(--safe-top) - var(--safe-bot));
+  /* Prevent iOS keyboard from pushing content off screen */
+  overflow: hidden;
 }
 
 .nuri-header {
