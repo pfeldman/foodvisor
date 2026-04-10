@@ -615,27 +615,34 @@ function renderNuri(container) {
   $('bottom-nav').style.display = 'none';
 
   const chatEl = $('nuri-chat');
-  const inputWrap = container.querySelector('.nuri-input-wrap');
+  const nuriView = container.querySelector('.nuri-view');
 
   setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
 
-  // With Keyboard resize:"none", the keyboard overlays.
-  // Use visualViewport to move input above keyboard.
-  if (window.visualViewport) {
-    const onViewportChange = () => {
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-      if (keyboardHeight > 50) {
-        inputWrap.style.transform = `translateY(-${keyboardHeight}px)`;
-        chatEl.style.paddingBottom = (80 + keyboardHeight) + 'px';
-      } else {
-        inputWrap.style.transform = '';
-        chatEl.style.paddingBottom = '';
-      }
+  // iOS keyboard fix: use visualViewport to set CSS vars for real viewport height.
+  // The input is positioned via CSS: top: var(--nuri-vvh); transform: translateY(-100%)
+  // so it always sits at the bottom of the *visible* viewport, not the layout viewport.
+  // The header uses position: sticky inside a grid container sized to --nuri-vvh.
+  // This approach comes from github.com/mattpilott/ios-chat and is proven on iOS WKWebView.
+  const vv = window.visualViewport;
+  if (vv) {
+    const setVVH = () => {
+      // Account for viewport offset (iOS may scroll the webview when keyboard opens)
+      const vvh = `${vv.offsetTop + vv.height}px`;
+      // When keyboard is open (viewport < 600px), don't add safe area padding
+      const vvs = vv.height < 600 ? '0px' : 'env(safe-area-inset-bottom)';
+      document.body.style.setProperty('--nuri-vvh', vvh);
+      document.body.style.setProperty('--nuri-vvs', vvs);
       setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
     };
-    window.visualViewport.addEventListener('resize', onViewportChange);
+    vv.addEventListener('resize', setVVH);
+    vv.addEventListener('scroll', setVVH);
+    setVVH(); // set initial values
     state._nuriCleanup = () => {
-      window.visualViewport.removeEventListener('resize', onViewportChange);
+      vv.removeEventListener('resize', setVVH);
+      vv.removeEventListener('scroll', setVVH);
+      document.body.style.removeProperty('--nuri-vvh');
+      document.body.style.removeProperty('--nuri-vvs');
       $('bottom-nav').style.display = '';
     };
   } else {

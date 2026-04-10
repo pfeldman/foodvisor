@@ -787,23 +787,21 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   z-index: 150;
   background: var(--bg);
   max-width: var(--max-w);
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: var(--nuri-vvh, 100vh);
+  overflow: hidden;
+  overscroll-behavior: contain;
   padding-top: var(--safe-top);
 }
 
 .nuri-header {
-  position: fixed;
-  top: var(--safe-top);
-  left: 0;
-  right: 0;
-  max-width: var(--max-w);
-  margin: 0 auto;
+  position: sticky;
+  top: 0;
   z-index: 151;
   display: flex;
   align-items: center;
@@ -844,11 +842,10 @@ body {
 }
 
 .nuri-chat {
-  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 80px 16px 80px;
+  padding: 12px 16px 80px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -960,7 +957,8 @@ body {
 
 .nuri-input-wrap {
   position: fixed;
-  bottom: 0;
+  top: var(--nuri-vvh, 100vh);
+  transform: translateY(-100%);
   left: 0;
   right: 0;
   max-width: var(--max-w);
@@ -968,10 +966,18 @@ body {
   z-index: 151;
   display: flex;
   gap: 8px;
-  padding: 12px 16px calc(12px + var(--safe-bot));
+  padding: 12px 16px calc(12px + var(--nuri-vvs, var(--safe-bot)));
   border-top: 1px solid var(--border);
   background: var(--bg);
-  transition: transform 0.25s ease;
+  transition: top 0.15s ease;
+  will-change: transform;
+  touch-action: none;
+}
+
+/* iOS Safari keyboard shift fix */
+@keyframes nuri-input-blink {
+  0%   { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 .nuri-input {
@@ -991,6 +997,7 @@ body {
 
 .nuri-input:focus {
   border-color: var(--accent);
+  animation: nuri-input-blink 0.02s;
 }
 
 .nuri-send {
