@@ -1,10 +1,30 @@
 #!/bin/bash
 # Configure iOS project for Foodvisor
 INFO_PLIST="ios/App/App/Info.plist"
+ENTITLEMENTS="ios/App/App/App.entitlements"
 
 # === Permissions ===
 /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Foodvisor needs camera access to photograph your food'" "$INFO_PLIST"
 /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Foodvisor needs photo library access to select food images'" "$INFO_PLIST"
+
+# HealthKit permissions
+/usr/libexec/PlistBuddy -c "Add :NSHealthShareUsageDescription string 'Foodvisor reads your weight, height and activity to personalize your nutritional goals'" "$INFO_PLIST"
+/usr/libexec/PlistBuddy -c "Add :NSHealthUpdateUsageDescription string 'Foodvisor logs your calories and macronutrients to Apple Health'" "$INFO_PLIST"
+
+# === HealthKit Entitlements ===
+cat > "$ENTITLEMENTS" << 'ENTXML'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.developer.healthkit</key>
+  <true/>
+  <key>com.apple.developer.healthkit.access</key>
+  <array/>
+</dict>
+</plist>
+ENTXML
+echo "HealthKit entitlements created"
 
 # === App Icon ===
 ICON_SRC="public/icons/icon-512.png"

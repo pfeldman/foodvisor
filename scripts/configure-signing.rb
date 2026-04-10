@@ -12,7 +12,8 @@ target.build_configurations.each do |config|
   config.build_settings['DEVELOPMENT_TEAM'] = team_id
   config.build_settings['PROVISIONING_PROFILE'] = pp_uuid
   config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ''
+  config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'App/App.entitlements'
 end
 
 project.save
-puts "Signing configured for App target: team=#{team_id}, profile=#{pp_uuid}"
+puts "Signing configured for App target: team=#{team_id}, profile=#{pp_uuid}, entitlements=App/App.entitlements"
