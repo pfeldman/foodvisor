@@ -1575,17 +1575,22 @@ const WIZARD_STEPS = [
                 alert('DEBUG weight error: ' + e.message);
               }
 
-              try {
-                const ago365 = new Date(Date.now() - 365 * 86400000).toISOString();
-                const hRes = await hp.readSamples({ dataType: 'height', startDate: ago365, endDate: now, limit: 1 });
-                alert('DEBUG height raw: ' + JSON.stringify(hRes).slice(0, 300));
-                const samples = hRes?.samples || hRes?.data || hRes?.results || [];
-                if (samples.length > 0) {
-                  const v = samples[0].value;
-                  heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+              // Try multiple type names for height
+              const heightTypes = ['height', 'bodyHeight', 'body_height', 'HKQuantityTypeIdentifierHeight'];
+              const ago365 = new Date(Date.now() - 365 * 86400000).toISOString();
+              for (const ht of heightTypes) {
+                try {
+                  const hRes = await hp.readSamples({ dataType: ht, startDate: ago365, endDate: now, limit: 1 });
+                  const samples = hRes?.samples || hRes?.data || hRes?.results || [];
+                  alert('DEBUG height "' + ht + '": ' + JSON.stringify(hRes).slice(0, 200));
+                  if (samples.length > 0) {
+                    const v = samples[0].value;
+                    heightVal = v > 3 ? Math.round(v) : Math.round(v * 100);
+                    break;
+                  }
+                } catch (e) {
+                  alert('DEBUG height "' + ht + '" error: ' + e.message);
                 }
-              } catch (e) {
-                alert('DEBUG height error: ' + e.message);
               }
             }
 
