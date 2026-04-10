@@ -1339,13 +1339,25 @@ const WIZARD_STEPS = [
     id: 'nombre',
     render: (data) => `
       <div class="wizard-step">
-        <h2 class="wizard-title">Como te llamas?</h2>
-        <p class="wizard-text">Para que Nuri, tu coach nutricional, sepa como hablarte.</p>
-        <input type="text" id="wiz-nombre" class="wizard-input" placeholder="Tu nombre" value="${data.nombre || ''}" autocomplete="off">
+        <h2 class="wizard-title">Contanos de vos</h2>
+        <p class="wizard-text">Para que Nuri, tu coach nutricional, personalice tu experiencia.</p>
+        <div class="wizard-fields">
+          <div class="wizard-field">
+            <label>Nombre</label>
+            <input type="text" id="wiz-nombre" class="wizard-input" placeholder="Tu nombre" value="${data.nombre || ''}" autocomplete="off">
+          </div>
+          <div class="wizard-field">
+            <label>Edad</label>
+            <input type="number" id="wiz-edad" class="wizard-input" placeholder="30" value="${data.edad || ''}" min="10" max="120">
+          </div>
+        </div>
         <button class="btn-primary wizard-next" data-next="sexo">Siguiente</button>
       </div>
     `,
-    save: () => ({ nombre: $('wiz-nombre')?.value.trim() || '' }),
+    save: () => ({
+      nombre: $('wiz-nombre')?.value.trim() || '',
+      edad: parseInt($('wiz-edad')?.value) || 30,
+    }),
   },
   {
     id: 'sexo',
@@ -1375,13 +1387,9 @@ const WIZARD_STEPS = [
     id: 'cuerpo',
     render: (data) => `
       <div class="wizard-step">
-        <h2 class="wizard-title">Tus datos</h2>
-        <p class="wizard-text">Para calcular tus necesidades caloricas diarias.</p>
+        <h2 class="wizard-title">Peso y altura</h2>
+        <p class="wizard-text">${data.healthSync ? 'Datos de Apple Health. Podes ajustarlos si no son correctos.' : 'Para calcular tus necesidades caloricas diarias.'}</p>
         <div class="wizard-fields">
-          <div class="wizard-field">
-            <label>Edad</label>
-            <input type="number" id="wiz-edad" class="wizard-input" placeholder="30" value="${data.edad || ''}" min="10" max="120">
-          </div>
           <div class="wizard-field">
             <label>Peso (kg)</label>
             <input type="number" id="wiz-peso" class="wizard-input" placeholder="70" value="${data.peso || ''}" min="20" max="300" step="0.5">
@@ -1395,7 +1403,6 @@ const WIZARD_STEPS = [
       </div>
     `,
     save: () => ({
-      edad: parseInt($('wiz-edad')?.value) || 30,
       peso: parseFloat($('wiz-peso')?.value) || 70,
       altura: parseInt($('wiz-altura')?.value) || 170,
     }),
