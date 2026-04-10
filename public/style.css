@@ -788,7 +788,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 90;
+  z-index: 150;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -796,7 +796,6 @@ body {
   margin: 0 auto;
   padding-top: var(--safe-top);
   overscroll-behavior: none;
-  touch-action: none;
 }
 
 .nuri-header {

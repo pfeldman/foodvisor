@@ -630,15 +630,9 @@ function renderNuri(container) {
   if (window.visualViewport) {
     const adjustHeight = () => {
       nuriView.style.height = window.visualViewport.height + 'px';
-      nuriView.style.top = window.visualViewport.offsetTop + 'px';
-      window.scrollTo(0, 0);
-      setTimeout(() => {
-        chatEl.scrollTop = chatEl.scrollHeight;
-        window.scrollTo(0, 0);
-      }, 50);
+      setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
     };
     window.visualViewport.addEventListener('resize', adjustHeight);
-    window.visualViewport.addEventListener('scroll', () => window.scrollTo(0, 0));
     adjustHeight();
 
     state._nuriCleanup = () => {
