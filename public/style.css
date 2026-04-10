@@ -798,12 +798,19 @@ body {
 }
 
 .nuri-header {
+  position: fixed;
+  top: var(--safe-top);
+  left: 0;
+  right: 0;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  background: var(--bg);
 }
 
 .nuri-avatar {
@@ -841,8 +848,7 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  touch-action: pan-y;
-  padding: 16px;
+  padding: 80px 16px 80px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -953,12 +959,18 @@ body {
 }
 
 .nuri-input-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  z-index: 2;
   display: flex;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 16px calc(12px + var(--safe-bot));
   border-top: 1px solid var(--border);
   background: var(--bg);
-  flex-shrink: 0;
 }
 
 .nuri-input {
