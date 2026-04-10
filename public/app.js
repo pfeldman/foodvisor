@@ -175,6 +175,11 @@ function setupNav() {
 
 // ─── Routing ──────────────────────────────────────
 function renderView(view) {
+  // Clean up Nuri fullscreen when leaving
+  if (state._nuriCleanup && view !== 'nuri') {
+    state._nuriCleanup();
+    state._nuriCleanup = null;
+  }
   state.view = view;
   const main = $('main');
   if (view === 'today')        renderToday(main);
@@ -607,9 +612,29 @@ function renderNuri(container) {
     }
   });
 
-  // Scroll main to bottom so latest messages + input are visible
-  const mainEl = $('main');
-  setTimeout(() => { mainEl.scrollTop = mainEl.scrollHeight; }, 100);
+  // Nuri is fullscreen fixed — hide bottom nav, manage keyboard
+  $('bottom-nav').style.display = 'none';
+
+  const chatEl = $('nuri-chat');
+  const nuriView = container.querySelector('.nuri-view');
+
+  // Scroll chat to bottom
+  setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
+
+  // Use visualViewport to adapt when keyboard opens/closes
+  if (window.visualViewport) {
+    const adjustHeight = () => {
+      nuriView.style.height = window.visualViewport.height + 'px';
+      setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 50);
+    };
+    window.visualViewport.addEventListener('resize', adjustHeight);
+    adjustHeight();
+
+    state._nuriCleanup = () => {
+      window.visualViewport.removeEventListener('resize', adjustHeight);
+      $('bottom-nav').style.display = '';
+    };
+  }
 }
 
 async function sendNuriMessage(text) {

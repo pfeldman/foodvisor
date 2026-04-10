@@ -783,9 +783,18 @@ body {
 
 /* ─── NURI (Coach) VIEW ──────────────────────────── */
 .nuri-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 54px - 72px - var(--safe-top) - var(--safe-bot));
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-top: var(--safe-top);
 }
 
 .nuri-header {
@@ -828,6 +837,8 @@ body {
 
 .nuri-chat {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -942,11 +953,10 @@ body {
   display: flex;
   gap: 8px;
   padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-bot));
   border-top: 1px solid var(--border);
   background: var(--bg);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
+  flex-shrink: 0;
 }
 
 .nuri-input {
