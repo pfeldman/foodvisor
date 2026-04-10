@@ -1534,32 +1534,62 @@ const WIZARD_STEPS = [
           syncBtn.disabled = true;
 
           try {
-            // DEBUG: Check what plugins are available
-            const plugins = window.Capacitor?.Plugins || {};
-            const pluginNames = Object.keys(plugins);
-            alert('DEBUG Plugins: ' + pluginNames.join(', '));
+            // DEBUG: step-by-step health check
+            const hp = window.Capacitor?.Plugins?.Health || null;
+            alert('DEBUG 1 - Health plugin: ' + (hp ? 'found' : 'null'));
 
-            // Read health data
-            let healthResult = null;
+            let avail = false;
             try {
-              healthResult = await syncHealthToProfile();
-              alert('DEBUG Health result: ' + JSON.stringify(healthResult));
+              const availResult = await hp.isAvailable();
+              avail = availResult?.available === true;
+              alert('DEBUG 2 - isAvailable raw: ' + JSON.stringify(availResult));
             } catch (e) {
-              alert('DEBUG Health error: ' + e.message);
+              alert('DEBUG 2 - isAvailable error: ' + e.message);
             }
 
-            // Read name from contacts
-            let ownerName = null;
-            try {
-              if (typeof Health !== 'undefined' && Health.getOwnerName) {
-                ownerName = await Health.getOwnerName();
-                alert('DEBUG Owner name: ' + JSON.stringify(ownerName));
-              } else {
-                alert('DEBUG getOwnerName not available');
+            let authOk = false;
+            if (avail) {
+              try {
+                const authResult = await hp.requestAuthorization({
+                  read: ['weight', 'height', 'steps'],
+                  write: ['calories'],
+                });
+                authOk = true;
+                alert('DEBUG 3 - auth raw: ' + JSON.stringify(authResult));
+              } catch (e) {
+                alert('DEBUG 3 - auth error: ' + e.message);
               }
-            } catch (e) {
-              alert('DEBUG Contacts error: ' + e.message);
             }
+
+            let weightVal = null, heightVal = null;
+            if (authOk) {
+              try {
+                const now = new Date().toISOString();
+                const ago = new Date(Date.now() - 90 * 86400000).toISOString();
+                const wRes = await hp.query({ type: 'weight', startDate: ago, endDate: now, limit: 1 });
+                alert('DEBUG 4 - weight raw: ' + JSON.stringify(wRes));
+                if (wRes?.data?.length > 0) weightVal = wRes.data[0].value;
+              } catch (e) {
+                alert('DEBUG 4 - weight error: ' + e.message);
+              }
+
+              try {
+                const now = new Date().toISOString();
+                const ago = new Date(Date.now() - 365 * 86400000).toISOString();
+                const hRes = await hp.query({ type: 'height', startDate: ago, endDate: now, limit: 1 });
+                alert('DEBUG 5 - height raw: ' + JSON.stringify(hRes));
+                if (hRes?.data?.length > 0) heightVal = hRes.data[0].value;
+              } catch (e) {
+                alert('DEBUG 5 - height error: ' + e.message);
+              }
+            }
+
+            let healthResult = null;
+            if (weightVal || heightVal) {
+              healthResult = { weight: weightVal, height: heightVal };
+            }
+
+            let ownerName = null;
 
             if (ownerName && !wizardData.nombre) {
               wizardData.nombre = ownerName;
