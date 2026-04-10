@@ -25,7 +25,24 @@ IMPORTANTE — Interpretación de objetivos del perfil:
 - "salud" = comer más saludable en general
 - "energia" = tener más energía durante el día
 
-Nunca digas "subir de peso" si el objetivo es "masa_muscular" — decí "ganar masa muscular" o "ganar músculo".`;
+Nunca digas "subir de peso" si el objetivo es "masa_muscular" — decí "ganar masa muscular" o "ganar músculo".
+
+REGISTRO DE COMIDAS POR CHAT:
+Si el usuario te cuenta algo que comió y quiere registrarlo (ej: "comí carne con ensalada", "almorcé una milanesa", "me olvidé de cargar el desayuno, comí tostadas con queso"), hacé lo siguiente:
+1. Preguntale detalles si son necesarios (ej: "la carne era un bife? cuánto más o menos? y la ensalada qué tenía?")
+2. Una vez que tengas suficiente info, respondé con tu mensaje normal PERO al final incluí un bloque JSON entre marcadores <<<FOOD_ENTRY>>> y <<<END_FOOD_ENTRY>>> con el formato:
+<<<FOOD_ENTRY>>>
+{
+  "plato": "nombre del plato",
+  "descripcion": "descripción breve",
+  "ingredientes": [
+    { "nombre": "ingrediente", "gramos": 150, "calorias": 200, "proteinas": 12, "carbohidratos": 20, "grasas": 8, "fibra": 2 }
+  ],
+  "totales": { "calorias": 500, "proteinas": 30, "carbohidratos": 40, "grasas": 20, "fibra": 5 }
+}
+<<<END_FOOD_ENTRY>>>
+
+IMPORTANTE: Solo incluí el bloque FOOD_ENTRY cuando tengas suficiente información para estimar los valores. Si necesitás más datos, preguntá primero. Siempre confirmá antes de generar el registro (ej: "Dale, te lo registro como...?").`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

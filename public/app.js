@@ -541,6 +541,11 @@ function renderNuri(container) {
   container.innerHTML = `
     <div class="nuri-view">
       <div class="nuri-header">
+          <button class="nuri-back" id="nuri-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
           <div class="nuri-avatar">N</div>
           <div class="nuri-intro">
             <div class="nuri-name">Nuri</div>
@@ -557,6 +562,7 @@ function renderNuri(container) {
                 <button class="nuri-suggestion" data-msg="Que me falta esta semana?">Que me falta esta semana?</button>
                 <button class="nuri-suggestion" data-msg="Dame una receta saludable para hoy">Receta para hoy</button>
                 <button class="nuri-suggestion" data-msg="Que deberia mejorar de mi alimentacion?">Que deberia mejorar?</button>
+              <button class="nuri-suggestion" data-msg="Me olvide de cargar una comida, te la cuento">Registrar comida</button>
               </div>
             </div>
           ` : state.nuriMessages.map(m => `
@@ -591,6 +597,9 @@ function renderNuri(container) {
   const chat = $('nuri-chat');
   chat.scrollTop = chat.scrollHeight;
 
+  // Bind food save buttons in chat
+  bindNuriFoodSaveButtons();
+
   // Suggestion buttons
   container.querySelectorAll('.nuri-suggestion').forEach(btn => {
     btn.addEventListener('click', () => sendNuriMessage(btn.dataset.msg));
@@ -610,6 +619,13 @@ function renderNuri(container) {
       const msg = input.value.trim();
       if (msg) sendNuriMessage(msg);
     }
+  });
+
+  // Back button
+  $('nuri-back').addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-btn[data-view="today"]').classList.add('active');
+    renderView('today');
   });
 
   $('bottom-nav').style.display = 'none';
@@ -728,10 +744,66 @@ function formatRecipes(recetas) {
 }
 
 function formatNuriMessage(text) {
-  // Basic markdown-like formatting
-  return escHtml(text)
+  // Extract food entry if present
+  const foodMatch = text.match(/<<<FOOD_ENTRY>>>([\s\S]*?)<<<END_FOOD_ENTRY>>>/);
+  let cleanText = text.replace(/<<<FOOD_ENTRY>>>[\s\S]*?<<<END_FOOD_ENTRY>>>/, '').trim();
+
+  let html = escHtml(cleanText)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\n/g, '<br>');
+
+  // Add save button if food entry found
+  if (foodMatch) {
+    try {
+      const foodData = JSON.parse(foodMatch[1].trim());
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(foodData))));
+      html += `<div class="nuri-food-save">
+        <div class="nuri-food-preview">${escHtml(foodData.plato)} — ${foodData.totales?.calorias || 0} kcal</div>
+        <button class="btn-primary nuri-save-btn" data-food="${encoded}" style="margin-top:8px;padding:10px 16px;font-size:13px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+          Guardar en mi registro
+        </button>
+      </div>`;
+    } catch (e) {
+      console.warn('Failed to parse food entry:', e);
+    }
+  }
+
+  return html;
+}
+
+function bindNuriFoodSaveButtons() {
+  document.querySelectorAll('.nuri-save-btn[data-food]').forEach(btn => {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', () => {
+      try {
+        const foodData = JSON.parse(decodeURIComponent(escape(atob(btn.dataset.food))));
+        const now = new Date();
+        const entry = {
+          id: genId(),
+          created_at: now.toISOString(),
+          date: fmt.iso(now),
+          dish_name: foodData.plato || 'Comida',
+          calories: Math.round(foodData.totales?.calorias || 0),
+          description: foodData.descripcion || '',
+          ingredientes: foodData.ingredientes || [],
+          totales: foodData.totales || {},
+          calidad: null,
+        };
+        DB.add(entry);
+        writeEntryToHealth(entry);
+        vibrate([10, 30, 10]);
+
+        // Update button to show saved
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Guardado!';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      } catch (e) {
+        console.error('Failed to save food entry:', e);
+      }
+    });
+  });
 }
 
 // ─── HISTORY VIEW ─────────────────────────────────

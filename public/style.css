@@ -815,6 +815,20 @@ body.nuri-locked {
   background: var(--bg);
 }
 
+.nuri-back {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nuri-back:active { color: var(--accent); }
+
 .nuri-avatar {
   width: 42px;
   height: 42px;
@@ -959,6 +973,18 @@ body.nuri-locked {
 @keyframes nuri-bounce {
   from { opacity: .3; transform: translateY(0); }
   to   { opacity: 1;  transform: translateY(-4px); }
+}
+
+.nuri-food-save {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.nuri-food-preview {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .nuri-input-wrap {
